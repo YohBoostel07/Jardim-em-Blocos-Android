@@ -657,9 +657,9 @@ class GardenGameView(context: Context) : View(context) {
         val prices=intArrayOf(80,120,60)
         if(counts[index]>0){
             when(index){
-                0->{hammerCount--;activePower="hammer"}
-                1->{rowBombCount--;activePower="row"}
-                2->{rerollCount--;pieces=MutableList(3){newPiece()};selected=0;gameOver=false}
+                0->{activePower="hammer";showShop=false}
+                1->{activePower="row";showShop=false}
+                2->{rerollCount--;showShop=false;pieces=MutableList(3){newPiece()};selected=0;gameOver=false}
             }
             savePowerInventory()
             playTone(ToneGenerator.TONE_PROP_ACK,130)
