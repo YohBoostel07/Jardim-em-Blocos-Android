@@ -545,8 +545,8 @@ class GardenGameView(context: Context) : View(context) {
         coins += piece.cells.size
         if (lines > 0) {
             coins += lines * 25
-            dailyLines += lines
             refreshDailyMission()
+            dailyLines += lines
             saveGardenProgress()
             clearedCells.forEach { (r, c) ->
                 sparks = sparks + Spark(boardLeft + (c + .5f) * cell,
@@ -578,6 +578,7 @@ class GardenGameView(context: Context) : View(context) {
             playTone(ToneGenerator.TONE_PROP_BEEP, 55)
             performHapticFeedback(android.view.HapticFeedbackConstants.KEYBOARD_TAP)
         }
+        saveGardenProgress()
 
         if (score > best) {
             best = score
