@@ -137,12 +137,6 @@ class GardenGameView(context: Context) : View(context) {
         val h = height.toFloat()
         if (w <= 0f || h <= 0f) return
 
-        paint.shader = LinearGradient(0f, 0f, w, h,
-            intArrayOf(Color.rgb(17, 55, 48), Color.rgb(29, 91, 67), Color.rgb(38, 105, 73)),
-            null, Shader.TileMode.CLAMP)
-        canvas.drawRect(0f, 0f, w, h, paint)
-        paint.shader = null
-        drawGardenBackdrop(canvas, w, h)
         if (mainMenuOpen) {
             when {
                 showAchievements -> drawAchievementsScreen(canvas, w, h)
@@ -175,7 +169,6 @@ class GardenGameView(context: Context) : View(context) {
     }
 
     private fun drawMainMenu(c: Canvas, w: Float, h: Float) {
-        drawGardenBackdrop(c,w,h)
         // Moldura superior e assinatura do jogo.
         val logo = RectF(w*.10f,h*.035f,w*.90f,h*.245f)
         drawPremiumCard(c,logo,30f,Color.argb(205,7,38,37),Color.argb(175,12,67,53))
@@ -197,7 +190,6 @@ class GardenGameView(context: Context) : View(context) {
         val hero=RectF(w*.075f,h*.285f,w*.925f,h*.565f)
         paint.color=Color.argb(100,0,0,0);c.drawRoundRect(RectF(hero.left,hero.top+h*.012f,hero.right,hero.bottom+h*.012f),28f,28f,paint)
         drawPremiumCard(c,hero,28f,Color.rgb(137,191,167),Color.rgb(34,103,70))
-        drawGardenMiniature(c,0,gardenStages[0],RectF(hero.left+w*.025f,hero.top+h*.018f,hero.right-w*.025f,hero.bottom-h*.012f))
         paint.shader=LinearGradient(0f,hero.centerY(),0f,hero.bottom,
             intArrayOf(Color.TRANSPARENT,Color.argb(220,5,35,30)),null,Shader.TileMode.CLAMP)
         c.drawRoundRect(hero,28f,28f,paint);paint.shader=null
@@ -314,36 +306,7 @@ class GardenGameView(context: Context) : View(context) {
         drawButton(c,w,h*.645f,"CONTINUAR",true)
     }
 
-    private fun drawGardenBackdrop(c: Canvas, w: Float, h: Float) {
-        // Céu de fantasia com luz volumétrica.
-        paint.shader=LinearGradient(0f,0f,0f,h,intArrayOf(Color.rgb(87,190,225),Color.rgb(155,218,224),Color.rgb(232,220,166)),null,Shader.TileMode.CLAMP)
-        c.drawRect(0f,0f,w,h,paint);paint.shader=null
-        paint.shader=RadialGradient(w*.79f,h*.15f,w*.24f,intArrayOf(Color.rgb(255,255,219),Color.argb(95,255,235,157),Color.TRANSPARENT),null,Shader.TileMode.CLAMP)
-        c.drawCircle(w*.79f,h*.15f,w*.24f,paint);paint.shader=null
-        paint.color=Color.rgb(255,246,197);c.drawCircle(w*.79f,h*.15f,w*.052f,paint)
-        // Nuvens fofas em camadas.
-        for(i in 0..3){val x=w*(.08f+i*.29f);val y=h*(.12f+(i%2)*.075f);drawCloud3D(c,x,y,w*.13f,h*.035f)}
-        // Montanhas distantes com faces iluminadas.
-        val m1=android.graphics.Path().apply{moveTo(0f,h*.49f);lineTo(w*.18f,h*.25f);lineTo(w*.32f,h*.47f);lineTo(w*.49f,h*.20f);lineTo(w*.72f,h*.49f);lineTo(w*.88f,h*.30f);lineTo(w,h*.48f);lineTo(w,h);lineTo(0f,h);close()}
-        paint.color=Color.rgb(91,155,148);c.drawPath(m1,paint)
-        val snow=android.graphics.Path().apply{moveTo(w*.18f,h*.25f);lineTo(w*.135f,h*.315f);lineTo(w*.19f,h*.295f);lineTo(w*.235f,h*.34f);close();moveTo(w*.49f,h*.20f);lineTo(w*.445f,h*.285f);lineTo(w*.50f,h*.265f);lineTo(w*.55f,h*.31f);close()}
-        paint.color=Color.rgb(230,239,213);c.drawPath(snow,paint)
-        val hillBack=android.graphics.Path().apply{moveTo(0f,h*.57f);cubicTo(w*.25f,h*.38f,w*.42f,h*.62f,w*.63f,h*.47f);cubicTo(w*.82f,h*.35f,w*.92f,h*.52f,w,h*.43f);lineTo(w,h);lineTo(0f,h);close()}
-        paint.color=Color.rgb(83,166,105);c.drawPath(hillBack,paint)
-        val hillFront=android.graphics.Path().apply{moveTo(0f,h*.70f);cubicTo(w*.22f,h*.53f,w*.40f,h*.72f,w*.62f,h*.59f);cubicTo(w*.79f,h*.48f,w*.92f,h*.68f,w,h*.55f);lineTo(w,h);lineTo(0f,h);close()}
-        paint.shader=LinearGradient(0f,h*.53f,0f,h,intArrayOf(Color.rgb(104,190,105),Color.rgb(37,121,72),Color.rgb(19,83,57)),null,Shader.TileMode.CLAMP)
-        c.drawPath(hillFront,paint);paint.shader=null
-        // Trilha sinuosa com bordas em relevo.
-        val path=android.graphics.Path().apply{moveTo(w*.02f,h*.88f);cubicTo(w*.27f,h*.67f,w*.43f,h*.89f,w*.58f,h*.73f);cubicTo(w*.72f,h*.60f,w*.82f,h*.72f,w,h*.60f)}
-        paint.style=Paint.Style.STROKE;paint.strokeCap=Paint.Cap.ROUND;paint.strokeWidth=w*.105f;paint.color=Color.rgb(110,83,54);c.drawPath(path,paint)
-        paint.strokeWidth=w*.080f;paint.color=Color.rgb(221,184,116);c.drawPath(path,paint);paint.strokeWidth=w*.006f;paint.color=Color.argb(90,255,243,193);c.drawPath(path,paint);paint.style=Paint.Style.FILL;paint.strokeCap=Paint.Cap.BUTT
-        // Árvores em primeiro plano, cada uma com tronco facetado e copas esféricas.
-        for(i in 0..6){val x=w*(.035f+i*.155f);val y=h*(.69f+(i%3)*.075f);drawTree3D(c,x,y,w*(.10f+(i%2)*.018f),if(i%2==0)Color.rgb(55,151,75)else Color.rgb(43,129,73),.78f+(i%3)*.12f)}
-        // Arbustos, pedras e flores individuais.
-        for(i in 0..9){val x=w*((i*29%93)/100f);val y=h*(.69f+(i*13%24)/100f);drawBush3D(c,x,y,w*.035f);if(i%2==0)drawRock3D(c,x+w*.018f,y+h*.008f,w*.025f,h*.014f)}
-        for(i in 0..22){val x=w*((i*41%97)/100f);val y=h*(.60f+(i*17%34)/100f);drawFlower3D(c,x,y,w*.014f,when(i%4){0->Color.rgb(255,103,145);1->Color.rgb(255,220,93);2->Color.rgb(190,143,239);else->Color.WHITE})}
-        for(i in 0..15){val x=w*((i*31%95)/100f);val y=h*(.23f+(i*19%65)/100f);paint.color=Color.argb(155,255,243,163);c.drawCircle(x,y,w*.003f,paint);paint.color=Color.argb(55,255,255,207);c.drawCircle(x,y,w*.009f,paint)}
-    }
+    private fun drawGardenBackdrop(c: Canvas, w: Float, h: Float) { /* O cenário é renderizado pela cena OpenGL 3D. */ }
 
     private fun drawCloud3D(c:Canvas,x:Float,y:Float,rx:Float,ry:Float){
         paint.color=Color.argb(45,43,91,105);c.drawOval(x-rx,y-ry*.05f,x+rx,y+ry*1.35f,paint)
@@ -432,215 +395,83 @@ class GardenGameView(context: Context) : View(context) {
         c.drawText("✿", button.centerX(), button.centerY() + w * .016f, paint)
     }
 
-    private fun drawGardenMiniature(c: Canvas,index:Int,stage:Int,rect:RectF){
-        val sky=when(index){0->Color.rgb(133,207,235);1->Color.rgb(145,205,184);else->Color.rgb(123,205,220)}
-        val grass=when(index){0->Color.rgb(102,183,91);1->Color.rgb(71,151,88);else->Color.rgb(77,164,130)}
-        paint.shader=LinearGradient(rect.left,rect.top,rect.left,rect.bottom,sky,Color.rgb(218,231,176),Shader.TileMode.CLAMP)
-        c.drawRoundRect(rect,18f,18f,paint);paint.shader=null
-        drawSphere3D(c,rect.right-rect.width()*.17f,rect.top+rect.height()*.19f,rect.width()*.075f,rect.height()*.12f,Color.rgb(255,220,116))
-        val far=android.graphics.Path().apply{moveTo(rect.left,rect.top+rect.height()*.60f);cubicTo(rect.left+rect.width()*.25f,rect.top+rect.height()*.25f,rect.left+rect.width()*.50f,rect.top+rect.height()*.55f,rect.right,rect.top+rect.height()*.38f);lineTo(rect.right,rect.bottom);lineTo(rect.left,rect.bottom);close()}
-        paint.color=Color.rgb(99,166,111);c.drawPath(far,paint)
-        val land=android.graphics.Path().apply{moveTo(rect.left,rect.top+rect.height()*.66f);cubicTo(rect.left+rect.width()*.30f,rect.top+rect.height()*.46f,rect.left+rect.width()*.58f,rect.top+rect.height()*.75f,rect.right,rect.top+rect.height()*.52f);lineTo(rect.right,rect.bottom);lineTo(rect.left,rect.bottom);close()}
-        paint.shader=LinearGradient(rect.left,rect.top+rect.height()*.5f,rect.left,rect.bottom,Color.rgb(133,201,100),grass,Shader.TileMode.CLAMP);c.drawPath(land,paint);paint.shader=null
-        if(index==2){
-            val water=android.graphics.Path().apply{moveTo(rect.left+rect.width()*.06f,rect.top+rect.height()*.70f);cubicTo(rect.left+rect.width()*.38f,rect.top+rect.height()*.57f,rect.left+rect.width()*.62f,rect.top+rect.height()*.85f,rect.right-rect.width()*.04f,rect.top+rect.height()*.66f);lineTo(rect.right,rect.bottom);lineTo(rect.left,rect.bottom);close()}
-            paint.shader=LinearGradient(rect.left,rect.top+rect.height()*.62f,rect.left,rect.bottom,Color.rgb(105,213,226),Color.rgb(30,123,167),Shader.TileMode.CLAMP);c.drawPath(water,paint);paint.shader=null
-            paint.color=Color.argb(145,230,255,249);c.drawLine(rect.left+rect.width()*.38f,rect.top+rect.height()*.73f,rect.left+rect.width()*.62f,rect.top+rect.height()*.72f,paint)
-            c.drawLine(rect.left+rect.width()*.68f,rect.top+rect.height()*.80f,rect.left+rect.width()*.83f,rect.top+rect.height()*.78f,paint)
-        }
-        drawTree3D(c,rect.left+rect.width()*.19f,rect.top+rect.height()*.79f,rect.width()*.12f,Color.rgb(45,145,73),.66f)
-        drawTree3D(c,rect.left+rect.width()*.82f,rect.top+rect.height()*.72f,rect.width()*.14f,if(index==1)Color.rgb(39,112,69)else Color.rgb(61,157,78),.80f)
-        drawRock3D(c,rect.left+rect.width()*.43f,rect.top+rect.height()*.83f,rect.width()*.045f,rect.height()*.035f)
-        if(stage>=1){
-            for(i in 0..4){val x=rect.left+rect.width()*(.30f+i*.105f);val y=rect.top+rect.height()*(.78f-(i%2)*.05f);drawFlower3D(c,x,y,rect.width()*.025f,if(i%2==0)Color.rgb(255,117,153)else Color.rgb(255,218,91))}
-        }
-        if(stage>=2){
-            drawTree3D(c,rect.left+rect.width()*.53f,rect.top+rect.height()*.78f,rect.width()*.15f,Color.rgb(45,157,69),1.05f)
-            for(i in 0..5){val x=rect.left+rect.width()*(.10f+i*.15f);drawBush3D(c,x,rect.top+rect.height()*.92f,rect.width()*.045f)}
-        }
-        if(stage>=3){
-            for(i in 0..10){val x=rect.left+rect.width()*(.07f+i*.085f);drawFlower3D(c,x,rect.top+rect.height()*.94f,rect.width()*.022f,when(i%4){0->Color.rgb(255,105,145);1->Color.rgb(255,222,87);2->Color.rgb(188,137,236);else->Color.WHITE})}
-            for(i in 0..3){paint.color=Color.argb(180,255,245,174);c.drawCircle(rect.left+rect.width()*(.2f+i*.2f),rect.top+rect.height()*(.3f+(i%2)*.12f),rect.width()*.008f,paint)}
-        }
-    }
+    private fun drawGardenMiniature(c: Canvas,index:Int,stage:Int,rect:RectF) { /* Miniaturas substituídas pelo cenário 3D real. */ }
 
     private fun drawGardenDetailScreen(c: Canvas, w: Float, h: Float) {
-        drawDim(c,w,h)
-        drawPremiumCard(c,RectF(w*.045f,h*.055f,w*.955f,h*.945f),30f,Color.rgb(247,239,207),Color.rgb(207,220,181))
         val index=selectedGarden.coerceIn(0,2);val stage=gardenStages[index]
         val unlocked=index==0||gardenStages[index-1]>=3
-        paint.textAlign=Paint.Align.CENTER;paint.typeface=Typeface.create("serif",Typeface.BOLD)
-        paint.color=Color.rgb(47,91,64);paint.textSize=w*.052f
-        c.drawText(gardenNames[index],w*.5f,h*.125f,paint)
-        paint.typeface=Typeface.create("sans-serif",Typeface.BOLD);paint.textSize=w*.025f;paint.color=Color.rgb(174,116,43)
-        c.drawText("✦  $coins MOEDAS",w*.5f,h*.17f,paint)
-        val scene=RectF(w*.10f,h*.205f,w*.90f,h*.57f)
-        drawPremiumCard(c,scene,23f,Color.rgb(150,204,183),Color.rgb(54,122,78))
-        drawGardenMiniature(c,index,stage,RectF(scene.left+4f,scene.top+4f,scene.right-4f,scene.bottom-4f))
-        paint.textAlign=Paint.Align.CENTER;paint.typeface=Typeface.create("sans-serif-condensed",Typeface.BOLD)
-        paint.color=Color.rgb(47,91,64);paint.textSize=w*.034f
-        c.drawText("ETAPA $stage DE 3",w*.5f,h*.625f,paint)
-        paint.typeface=Typeface.create("sans-serif",Typeface.NORMAL);paint.textSize=w*.025f;paint.color=Color.rgb(103,111,87)
-        c.drawText(gardenDescriptions[index],w*.5f,h*.67f,paint)
-        val progress=RectF(w*.18f,h*.705f,w*.82f,h*.725f)
-        rounded(c,progress,10f,Color.rgb(192,204,169))
+        paint.textAlign=Paint.Align.CENTER
+        drawPremiumCard(c,RectF(w*.07f,h*.045f,w*.93f,h*.19f),25f,Color.argb(225,10,43,39),Color.argb(220,5,28,31))
+        paint.typeface=Typeface.create("sans-serif-rounded",Typeface.BOLD)
+        paint.color=Color.WHITE;paint.textSize=w*.055f
+        c.drawText(gardenNames[index],w*.5f,h*.115f,paint)
+        paint.textSize=w*.025f;paint.color=Color.rgb(255,226,150)
+        c.drawText("✦  $coins MOEDAS",w*.5f,h*.16f,paint)
+        drawPremiumCard(c,RectF(w*.12f,h*.30f,w*.88f,h*.47f),22f,Color.argb(145,10,43,39),Color.argb(125,5,28,31))
+        paint.color=Color.WHITE;paint.textSize=w*.034f
+        c.drawText("JARDIM 3D • ETAPA $stage DE 3",w*.5f,h*.39f,paint)
+        paint.textSize=w*.023f;paint.color=Color.rgb(220,240,215)
+        c.drawText(gardenDescriptions[index],w*.5f,h*.435f,paint)
+        val progress=RectF(w*.18f,h*.535f,w*.82f,h*.555f)
+        rounded(c,progress,10f,Color.argb(170,190,204,169))
         if(stage>0)drawPremiumCard(c,RectF(progress.left,progress.top,progress.left+progress.width()*stage/3f,progress.bottom),9f,Color.rgb(129,191,107),Color.rgb(59,139,76))
-        val action=RectF(w*.18f,h*.755f,w*.82f,h*.835f)
+        val action=RectF(w*.18f,h*.63f,w*.82f,h*.72f)
         val canRestore=unlocked&&stage<3&&coins>=gardenCosts[index][stage]
         val label=when{!unlocked->"JARDIM BLOQUEADO";stage>=3->"JARDIM RESTAURADO!";else->"RESTAURAR  •  "+gardenCosts[index][stage]+" MOEDAS"}
         drawPremiumCard(c,action,19f,if(canRestore)Color.rgb(105,177,103)else Color.rgb(184,195,165),if(canRestore)Color.rgb(44,121,71)else Color.rgb(140,157,130))
         paint.color=Color.WHITE;paint.textSize=w*.028f;paint.typeface=Typeface.create("sans-serif",Typeface.BOLD)
         c.drawText(label,action.centerX(),action.centerY()+w*.01f,paint)
-        val back=RectF(w*.25f,h*.865f,w*.75f,h*.92f)
+        val back=RectF(w*.25f,h*.84f,w*.75f,h*.91f)
         drawPremiumCard(c,back,15f,Color.rgb(72,151,94),Color.rgb(34,103,67))
         paint.color=Color.WHITE;paint.textSize=w*.029f
         c.drawText("VOLTAR AOS JARDINS",back.centerX(),back.centerY()+w*.01f,paint)
     }
 
     private fun drawGardensScreen(c: Canvas, w: Float, h: Float) {
-        // Mapa-múndi ilustrado: terreno contínuo, rio, trilha e regiões exploráveis.
-        paint.shader = LinearGradient(0f, 0f, w, h,
-            intArrayOf(Color.rgb(157, 202, 157), Color.rgb(190, 211, 151), Color.rgb(225, 211, 153)),
-            null, Shader.TileMode.CLAMP)
-        c.drawRect(0f, 0f, w, h, paint)
-        paint.shader = null
-
-        // Colinas e clareiras ao fundo.
-        paint.color = Color.rgb(119, 174, 119)
-        c.drawOval(-w*.28f, h*.12f, w*.68f, h*.53f, paint)
-        c.drawOval(w*.42f, h*.30f, w*1.22f, h*.72f, paint)
-        paint.color = Color.rgb(139, 190, 126)
-        c.drawOval(-w*.20f, h*.48f, w*.72f, h*.88f, paint)
-        c.drawOval(w*.38f, h*.62f, w*1.18f, h*.96f, paint)
-
-        // Rio sinuoso atravessando o mundo.
-        val river = android.graphics.Path().apply {
-            moveTo(w*1.08f, h*.18f)
-            cubicTo(w*.72f, h*.29f, w*.92f, h*.39f, w*.55f, h*.49f)
-            cubicTo(w*.18f, h*.59f, w*.48f, h*.69f, w*.02f, h*.79f)
-        }
-        paint.style = Paint.Style.STROKE
-        paint.strokeCap = Paint.Cap.ROUND
-        paint.strokeWidth = w*.105f
-        paint.color = Color.rgb(104, 177, 190)
-        c.drawPath(river, paint)
-        paint.strokeWidth = w*.012f
-        paint.color = Color.argb(115, 224, 250, 235)
-        c.drawPath(river, paint)
-
-        // Trilha de exploração com borda escura e centro de areia.
-        val trail = android.graphics.Path().apply {
-            moveTo(w*.28f, h*.285f)
-            cubicTo(w*.78f, h*.34f, w*.18f, h*.43f, w*.70f, h*.49f)
-            cubicTo(w*.91f, h*.56f, w*.17f, h*.62f, w*.32f, h*.705f)
-        }
-        paint.strokeWidth = w*.052f
-        paint.color = Color.rgb(119, 104, 68)
-        c.drawPath(trail, paint)
-        paint.strokeWidth = w*.034f
-        paint.color = Color.rgb(239, 211, 145)
-        c.drawPath(trail, paint)
-        paint.style = Paint.Style.FILL
-        paint.strokeCap = Paint.Cap.BUTT
-
-        // Bosques 3D distribuídos em diferentes planos de profundidade.
-        for (i in 0..9) {
-            val x = w * (0.08f + (i % 5) * .205f)
-            val y = h * (0.235f + (i / 5) * .255f)
-            drawTree3D(c,x,y+w*.012f,w*.050f,if(i%3==0)Color.rgb(38,119,69)else Color.rgb(53,151,72),.62f+(i%3)*.12f)
-            if(i%2==0)drawRock3D(c,x+w*.035f,y+w*.008f,w*.018f,w*.012f)
-        }
-
-        // Cabeçalho flutuante.
-        rounded(c, RectF(w*.055f,h*.035f,w*.945f,h*.155f), 25f, Color.rgb(248,239,204))
-        paint.textAlign = Paint.Align.CENTER
-        paint.typeface = Typeface.create("sans-serif-rounded", Typeface.BOLD)
-        paint.color = Color.rgb(47,91,64)
-        paint.textSize = w*.060f
-        c.drawText("MUNDO JARDIM",w*.5f,h*.092f,paint)
-        paint.textSize = w*.027f
-        paint.color = Color.rgb(116,105,68)
-        c.drawText("Explore, restaure e desbloqueie novas terras",w*.5f,h*.132f,paint)
-        rounded(c,RectF(w*.66f,h*.165f,w*.94f,h*.211f),14f,Color.rgb(255,245,210))
-        paint.color = Color.rgb(174,116,43)
-        paint.textSize = w*.026f
-        c.drawText("✦  "+coins+" moedas",w*.80f,h*.196f,paint)
-
-        val centersX = floatArrayOf(.28f,.70f,.32f)
-        val centersY = floatArrayOf(.295f,.49f,.695f)
-        val regionColors = intArrayOf(Color.rgb(244,190,112),Color.rgb(131,177,119),Color.rgb(116,190,205))
-        for (i in 0..2) {
-            val cx = w*centersX[i]
-            val cy = h*centersY[i]
-            val unlocked = i == 0 || gardenStages[i-1] >= 3
-            val stage = gardenStages[i]
-            val island = RectF(cx-w*.205f,cy-h*.078f,cx+w*.205f,cy+h*.078f)
-
-            // Ilha flutuante com lateral de terra, borda de pedra e gramado elevado.
-            paint.color = Color.argb(75,24,48,30)
-            c.drawOval(island.left+w*.018f,island.top+h*.035f,island.right+w*.018f,island.bottom+h*.035f,paint)
-            paint.color = Color.rgb(104,73,48)
-            c.drawOval(island.left,island.top+h*.012f,island.right,island.bottom+h*.045f,paint)
-            paint.color = Color.rgb(164,130,78)
-            c.drawOval(island.left,island.top,island.right,island.bottom+h*.020f,paint)
-            paint.color = Color.rgb(219,201,145)
-            c.drawOval(island.left+w*.012f,island.top+h*.002f,island.right-w*.012f,island.bottom-h*.004f,paint)
-            paint.shader=LinearGradient(island.left,island.top,island.left,island.bottom,regionColors[i],Color.rgb(63,130,73),Shader.TileMode.CLAMP)
-            c.drawOval(island.left+w*.021f,island.top+h*.008f,island.right-w*.021f,island.bottom-h*.012f,paint);paint.shader=null
-            paint.color=Color.argb(90,255,255,225)
-            c.drawOval(island.left+w*.10f,island.top+h*.018f,island.left+w*.30f,island.top+h*.045f,paint)
-
-            val scene = RectF(cx-w*.155f,cy-h*.061f,cx+w*.155f,cy+h*.040f)
-            drawGardenMiniature(c,i,stage,scene)
-
-            // Faixa com nome e estado da região.
-            val namePlate = RectF(cx-w*.17f,cy+h*.040f,cx+w*.17f,cy+h*.073f)
-            rounded(c,namePlate,10f,Color.rgb(250,244,218))
-            paint.textAlign = Paint.Align.CENTER
-            paint.typeface = Typeface.create("sans-serif-rounded",Typeface.BOLD)
-            paint.textSize = w*.025f
-            paint.color = Color.rgb(47,91,64)
-            c.drawText(gardenNames[i],cx,cy+h*.062f,paint)
-
-            // Medalhão de progresso.
-            paint.color = if (!unlocked) Color.rgb(104,108,93) else if (stage>=3) Color.rgb(230,174,59) else Color.rgb(68,132,78)
-            c.drawCircle(cx+w*.157f,cy-h*.050f,w*.036f,paint)
-            paint.color = Color.WHITE
-            paint.textSize = w*.034f
-            c.drawText(if(!unlocked)"×" else if(stage>=3)"★" else (stage+1).toString(),cx+w*.157f,cy-h*.038f,paint)
-
-            if (!unlocked) {
-                paint.color = Color.argb(135,35,47,38)
-                c.drawOval(island.left,island.top,island.right,island.bottom,paint)
-                paint.color = Color.WHITE
-                paint.textSize = w*.025f
-                c.drawText("CONCLUA A REGIÃO ANTERIOR",cx,cy+h*.012f,paint)
-            }
-        }
-
-        // Painel compacto de missões e recompensas.
-        rounded(c,RectF(w*.055f,h*.785f,w*.945f,h*.885f),20f,Color.rgb(248,239,204))
-        paint.textAlign=Paint.Align.LEFT
+        // Interface leve sobre as ilhas 3D renderizadas em OpenGL.
+        paint.textAlign=Paint.Align.CENTER
+        drawPremiumCard(c,RectF(w*.055f,h*.035f,w*.945f,h*.155f),25f,Color.argb(225,17,55,48),Color.argb(220,8,35,35))
         paint.typeface=Typeface.create("sans-serif-rounded",Typeface.BOLD)
-        paint.color=Color.rgb(47,91,64)
-        paint.textSize=w*.025f
+        paint.color=Color.WHITE;paint.textSize=w*.060f
+        c.drawText("MUNDO JARDIM",w*.5f,h*.092f,paint)
+        paint.textSize=w*.025f;paint.color=Color.rgb(224,244,210)
+        c.drawText("Explore, restaure e desbloqueie novas terras",w*.5f,h*.132f,paint)
+        drawPremiumCard(c,RectF(w*.66f,h*.165f,w*.94f,h*.211f),14f,Color.rgb(255,229,151),Color.rgb(196,133,48))
+        paint.color=Color.rgb(58,66,39);paint.textSize=w*.026f
+        c.drawText("✦  "+coins+" moedas",w*.80f,h*.196f,paint)
+        val centersY=floatArrayOf(.295f,.49f,.695f)
+        for(i in 0..2){
+            val cy=h*centersY[i]
+            val unlocked=i==0||gardenStages[i-1]>=3
+            val stage=gardenStages[i]
+            val panel=RectF(w*.10f,cy-h*.065f,w*.90f,cy+h*.065f)
+            drawPremiumCard(c,panel,20f,Color.argb(218,10,43,39),Color.argb(220,5,28,31))
+            paint.textAlign=Paint.Align.LEFT
+            paint.typeface=Typeface.create("sans-serif-rounded",Typeface.BOLD)
+            paint.color=Color.WHITE;paint.textSize=w*.040f
+            c.drawText(gardenNames[i],w*.16f,cy-h*.006f,paint)
+            paint.typeface=Typeface.create("sans-serif",Typeface.NORMAL)
+            paint.color=Color.rgb(211,235,202);paint.textSize=w*.025f
+            c.drawText(if(!unlocked)"Conclua a região anterior" else "Restauração: $stage de 3",w*.16f,cy+h*.035f,paint)
+            paint.textAlign=Paint.Align.RIGHT
+            paint.typeface=Typeface.create("sans-serif",Typeface.BOLD)
+            paint.color=if(!unlocked)Color.LTGRAY else if(stage>=3)Color.rgb(255,218,112)else Color.rgb(171,235,157)
+            paint.textSize=w*.027f
+            c.drawText(if(!unlocked)"BLOQUEADO"else if(stage>=3)"CONCLUÍDO ★"else "ABRIR  ›",w*.84f,cy+h*.012f,paint)
+        }
+        drawPremiumCard(c,RectF(w*.055f,h*.785f,w*.945f,h*.885f),20f,Color.argb(225,17,55,48),Color.argb(220,8,35,35))
+        paint.textAlign=Paint.Align.LEFT;paint.typeface=Typeface.create("sans-serif-rounded",Typeface.BOLD)
+        paint.color=Color.WHITE;paint.textSize=w*.025f
         c.drawText("MISSÃO DIÁRIA  •  "+dailyLines+"/5 linhas",w*.09f,h*.818f,paint)
         c.drawText("MISSÃO SEMANAL  •  "+weeklyLines+"/20 linhas",w*.09f,h*.858f,paint)
-        val dr=dailyLines>=5&&!dailyRewardClaimed
-        val wr=weeklyLines>=20&&!weeklyRewardClaimed
-        rounded(c,RectF(w*.70f,h*.795f,w*.90f,h*.835f),10f,if(dr)Color.rgb(83,151,91)else Color.rgb(188,199,172))
-        rounded(c,RectF(w*.70f,h*.838f,w*.90f,h*.878f),10f,if(wr)Color.rgb(83,151,91)else Color.rgb(188,199,172))
-        paint.textAlign=Paint.Align.CENTER
-        paint.textSize=w*.019f
-        paint.typeface=Typeface.create("sans-serif",Typeface.BOLD)
-        paint.color=if(dr)Color.WHITE else Color.rgb(76,91,66)
+        val dr=dailyLines>=5&&!dailyRewardClaimed;val wr=weeklyLines>=20&&!weeklyRewardClaimed
+        drawPremiumCard(c,RectF(w*.70f,h*.795f,w*.90f,h*.835f),10f,if(dr)Color.rgb(83,151,91)else Color.rgb(103,125,104),if(dr)Color.rgb(49,124,72)else Color.rgb(65,83,71))
+        drawPremiumCard(c,RectF(w*.70f,h*.838f,w*.90f,h*.878f),10f,if(wr)Color.rgb(83,151,91)else Color.rgb(103,125,104),if(wr)Color.rgb(49,124,72)else Color.rgb(65,83,71))
+        paint.textAlign=Paint.Align.CENTER;paint.textSize=w*.019f;paint.color=Color.WHITE
         c.drawText(if(dailyRewardClaimed)"RESGATADA"else"+100 MOEDAS",w*.80f,h*.821f,paint)
-        paint.color=if(wr)Color.WHITE else Color.rgb(76,91,66)
         c.drawText(if(weeklyRewardClaimed)"RESGATADA"else"+250 MOEDAS",w*.80f,h*.864f,paint)
-        rounded(c,RectF(w*.27f,h*.90f,w*.73f,h*.955f),16f,Color.rgb(57,119,70))
-        paint.color=Color.WHITE
-        paint.textSize=w*.028f
-        c.drawText("VOLTAR AO JOGO",w*.5f,h*.936f,paint)
+        drawPremiumCard(c,RectF(w*.27f,h*.90f,w*.73f,h*.955f),16f,Color.rgb(57,119,70),Color.rgb(34,103,67))
+        paint.textSize=w*.028f;c.drawText("VOLTAR AO JOGO",w*.5f,h*.936f,paint)
     }
     private fun refreshDailyMission() {
         val today = SimpleDateFormat("yyyyMMdd", Locale.US).format(Date())
