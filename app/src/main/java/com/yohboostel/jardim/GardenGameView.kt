@@ -50,7 +50,9 @@ class GardenGameView(context: Context) : View(context) {
     )
 
     private data class Piece(val cells: List<Pair<Int, Int>>, val color: Int)
-    private data class Spark(val x: Float, val y: Float, val color: Int, val size: Float)
+    private data class Spark(val x: Float, val y: Float, val color: Int, val size: Float, val vx: Float = 0f, val vy: Float = 0f, val rotation: Float = 0f)
+    private data class Blast(val x: Float, val y: Float, val color: Int)
+    private var blastCenters = emptyList<Blast>()
 
     private var pieces = MutableList<Piece?>(3) { newPiece() }
     private var selected = 0
@@ -742,7 +744,7 @@ class GardenGameView(context: Context) : View(context) {
             when(index){
                 0->{activePower="hammer";showShop=false}
                 1->{activePower="row";showShop=false}
-                2->{rerollCount--;showShop=false;pieces=MutableList(3){newPiece()};selected=0;gameOver=false}
+                2->{rerollCount--;showShop=false;pieces=MutableList(3){newPiece()};selected=0;gameOver=false;emitBurst(width*.5f,height*.52f,Color.rgb(255,220,125),28,1.7f);animateEffects();playPowerSound("reroll")}
             }
             savePowerInventory()
             playTone(ToneGenerator.TONE_PROP_ACK,130)
@@ -758,32 +760,43 @@ class GardenGameView(context: Context) : View(context) {
     }
 
     private fun usePowerAt(x:Float,y:Float) {
-        if(activePower.isEmpty() || x<boardLeft || x>=boardLeft+boardSize || y<boardTop || y>=boardTop+boardSize)return
-        val row=((y-boardTop)/cell).toInt().coerceIn(0,8)
-        val col=((x-boardLeft)/cell).toInt().coerceIn(0,8)
-        var removed=0
-        if(activePower=="hammer" && board[row][col]){
-            board[row][col]=false
-            colors[row][col]=Color.TRANSPARENT
-            removed=1
-        } else if(activePower=="row"){
-            for(c in 0..8) if(board[row][c]){
-                board[row][c]=false
-                colors[row][c]=Color.TRANSPARENT
+        if (activePower.isEmpty()) return
+        if (x < boardLeft || x >= boardLeft + boardSize || y < boardTop || y >= boardTop + boardSize) {
+            playTone(ToneGenerator.TONE_PROP_BEEP, 55)
+            return
+        }
+        val row = ((y - boardTop) / cell).toInt().coerceIn(0, 8)
+        val col = ((x - boardLeft) / cell).toInt().coerceIn(0, 8)
+        val powerUsed = activePower
+        var removed = 0
+        if (powerUsed == "hammer") {
+            if (board[row][col]) {
+                emitBurst(boardLeft + (col + .5f) * cell, boardTop + (row + .5f) * cell, colors[row][col], 18, 1.25f)
+                board[row][col] = false
+                colors[row][col] = Color.TRANSPARENT
+                removed = 1
+            }
+        } else if (powerUsed == "row") {
+            for (c in 0..8) if (board[row][c]) {
+                emitBurst(boardLeft + (c + .5f) * cell, boardTop + (row + .5f) * cell, colors[row][c], 9, 1.1f)
+                board[row][c] = false
+                colors[row][c] = Color.TRANSPARENT
                 removed++
             }
         }
-        if(removed>0){
-            score+=removed*10
-            if(score>best){best=score;prefs.edit().putInt("best_score",best).apply()}
-            level=1+score/500
-            if(activePower=="hammer")hammerCount-- else rowBombCount--
-            activePower=""
+        if (removed > 0) {
+            score += removed * 10
+            if (score > best) { best = score; prefs.edit().putInt("best_score", best).apply() }
+            level = 1 + score / 500
+            if (powerUsed == "hammer") hammerCount-- else rowBombCount--
+            activePower = ""
             savePowerInventory()
-            gameOver=!availablePiecesHaveMove()
-            playTone(ToneGenerator.TONE_PROP_ACK,160)
+            animateEffects()
+            playPowerSound(powerUsed)
+            gameOver = !availablePiecesHaveMove()
         } else {
-            playTone(ToneGenerator.TONE_PROP_BEEP,70)
+            // O item continua disponível se a célula ou linha estiver vazia.
+            playTone(ToneGenerator.TONE_PROP_BEEP, 65)
         }
         invalidate()
     }
@@ -803,11 +816,37 @@ class GardenGameView(context: Context) : View(context) {
     }
 
     private fun drawSparks(c: Canvas) {
-        sparks.forEach {
-            paint.color = withAlpha(it.color, (255 * (1f - effectProgress)).toInt().coerceIn(0, 255))
-            c.drawCircle(it.x, it.y - effectProgress * height * .07f,
-                it.size * (1f - effectProgress * .35f), paint)
+        val t = effectProgress
+        blastCenters.forEach { blast ->
+            paint.style = Paint.Style.STROKE
+            paint.strokeWidth = max(2f, cell * .055f * (1f - t * .45f))
+            paint.color = withAlpha(blast.color, (190f * (1f - t)).toInt().coerceIn(0, 190))
+            c.drawCircle(blast.x, blast.y, cell * (.25f + t * 2.1f), paint)
+            paint.style = Paint.Style.FILL
         }
+        sparks.forEach { particle ->
+            val px = particle.x + particle.vx * t
+            val py = particle.y + particle.vy * t + height * .12f * t * t
+            paint.color = withAlpha(particle.color, (255f * (1f - t)).toInt().coerceIn(0, 255))
+            c.save()
+            c.rotate(particle.rotation + t * 250f, px, py)
+            val half = particle.size * (1f - t * .45f)
+            c.drawRoundRect(RectF(px-half, py-half*.65f, px+half, py+half*.65f), half*.18f, half*.18f, paint)
+            c.restore()
+        }
+        paint.style = Paint.Style.FILL
+    }
+
+    private fun emitBurst(x: Float, y: Float, color: Int, amount: Int = 12, spread: Float = 1f) {
+        blastCenters = (blastCenters + Blast(x, y, color)).takeLast(24)
+        val fragments = (0 until amount).map {
+            val angle = Random.nextFloat() * (Math.PI.toFloat() * 2f)
+            val speed = cell * (.35f + Random.nextFloat() * 1.15f) * spread
+            Spark(x, y, color, cell * (.055f + Random.nextFloat() * .07f),
+                kotlin.math.cos(angle) * speed, kotlin.math.sin(angle) * speed - cell * .22f,
+                Random.nextFloat() * 180f)
+        }
+        sparks = (sparks + fragments).takeLast(220)
     }
 
     private fun drawDim(c: Canvas, w: Float, h: Float) {
@@ -926,6 +965,18 @@ class GardenGameView(context: Context) : View(context) {
         }
     }
 
+    private fun playPowerSound(power: String) {
+        if (!soundEnabled) return
+        try {
+            when (power) {
+                "hammer" -> { tone.startTone(ToneGenerator.TONE_PROP_NACK, 115); performHapticFeedback(android.view.HapticFeedbackConstants.LONG_PRESS) }
+                "row" -> { tone.startTone(ToneGenerator.TONE_PROP_ACK, 260); performHapticFeedback(android.view.HapticFeedbackConstants.CONFIRM) }
+                "reroll" -> { tone.startTone(ToneGenerator.TONE_PROP_BEEP, 90); performHapticFeedback(android.view.HapticFeedbackConstants.KEYBOARD_TAP) }
+                "line" -> { tone.startTone(ToneGenerator.TONE_PROP_ACK, 230); performHapticFeedback(android.view.HapticFeedbackConstants.CONFIRM) }
+            }
+        } catch (_: Exception) { }
+    }
+
     private fun placePiece(piece: Piece, row: Int, col: Int) {
         piece.cells.forEach { (dx, dy) ->
             board[row + dy][col + dx] = true
@@ -948,8 +999,7 @@ class GardenGameView(context: Context) : View(context) {
             weeklyLines += lines
             saveGardenProgress()
             clearedCells.forEach { (r, c) ->
-                sparks = sparks + Spark(boardLeft + (c + .5f) * cell,
-                    boardTop + (r + .5f) * cell, colors[r][c], cell * .17f)
+                emitBurst(boardLeft + (c + .5f) * cell, boardTop + (r + .5f) * cell, colors[r][c], 5, .8f)
                 board[r][c] = false
                 colors[r][c] = Color.TRANSPARENT
             }
@@ -971,8 +1021,7 @@ class GardenGameView(context: Context) : View(context) {
             }
             comboAlpha = 1f
             animateEffects()
-            playTone(if (lines >= 3) ToneGenerator.TONE_PROP_ACK else ToneGenerator.TONE_PROP_BEEP, 180)
-            performHapticFeedback(android.view.HapticFeedbackConstants.CONFIRM)
+            playPowerSound("line")
         } else {
             playTone(ToneGenerator.TONE_PROP_BEEP, 55)
             performHapticFeedback(android.view.HapticFeedbackConstants.KEYBOARD_TAP)
@@ -1007,11 +1056,12 @@ class GardenGameView(context: Context) : View(context) {
     private fun animateEffects() {
         effectProgress = 0f
         ValueAnimator.ofFloat(0f, 1f).apply {
-            duration = 480
+            duration = 620
             interpolator = DecelerateInterpolator()
             addUpdateListener {
                 effectProgress = it.animatedValue as Float
                 comboAlpha = 1f - effectProgress
+                if (effectProgress >= 1f) { sparks = emptyList(); blastCenters = emptyList() }
                 postInvalidateOnAnimation()
             }
             start()
@@ -1032,6 +1082,7 @@ class GardenGameView(context: Context) : View(context) {
         pieces = MutableList(3) { newPiece() }
         selected = 0
         sparks = emptyList()
+        blastCenters = emptyList()
         comboAlpha = 0f
         lastComboLines = 0
         lastMoveTime = 0L
@@ -1073,6 +1124,13 @@ class GardenGameView(context: Context) : View(context) {
     override fun onTouchEvent(event: MotionEvent): Boolean {
         if (event.action == MotionEvent.ACTION_DOWN) {
             if (mainMenuOpen || showTutorial || paused || gameOver || confirmRestart || showGardens || showShop || showExpeditionComplete) return true
+            if (activePower.isNotEmpty()) {
+                dragging = false
+                previewRow = -1
+                previewCol = -1
+                invalidate()
+                return true
+            }
             if (event.y < height * .22f && event.x > width * .82f) return true
             if (event.y > trayCenterY - height * .06f && event.y < trayCenterY + height * .06f) {
                 choosePieceAt(event.x)
@@ -1092,13 +1150,7 @@ class GardenGameView(context: Context) : View(context) {
         }
         when (event.action) {
             MotionEvent.ACTION_MOVE -> {
-                if (activePower.isNotEmpty()) {
-                    dragging=false
-                    previewRow=-1
-                    previewCol=-1
-                    usePowerAt(event.x,event.y)
-                    return true
-                }
+                if (activePower.isNotEmpty()) return true
                 if (dragging) {
                     updatePreview(event.x, event.y)
                     invalidate()
@@ -1106,6 +1158,14 @@ class GardenGameView(context: Context) : View(context) {
                 return true
             }
             MotionEvent.ACTION_UP -> {
+                if (activePower.isNotEmpty()) {
+                    dragging = false
+                    previewRow = -1
+                    previewCol = -1
+                    usePowerAt(event.x, event.y)
+                    invalidate()
+                    return true
+                }
                 if (mainMenuOpen) {
                     if (showExpeditions) {
                         if (event.y > height*.80f) {
