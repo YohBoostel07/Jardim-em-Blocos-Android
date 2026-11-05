@@ -84,10 +84,12 @@ func _create_world() -> void:
 
 	camera = Camera3D.new()
 	camera.projection = Camera3D.PROJECTION_ORTHOGONAL
-	camera.size = 14.2
-	camera.position = Vector3(0, 12.8, 15.8)
-	camera.look_at(Vector3(0, 0, 0), Vector3.UP)
+	camera.size = 15.5
+	camera.near = 0.05
+	camera.far = 100.0
 	add_child(camera)
+	camera.position = Vector3(0.0, 17.0, 0.01)
+	camera.look_at_from_position(Vector3(0.0, 17.0, 0.01), Vector3(0.0, 0.0, 0.0), Vector3(0.0, 0.0, -1.0))
 	camera.current = true
 
 	var sun := DirectionalLight3D.new()
