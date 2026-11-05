@@ -29,9 +29,9 @@ class GardenGameView(context: Context) : View(context) {
     private val board = Array(9) { BooleanArray(9) }
     private val colors = Array(9) { IntArray(9) }
     private val palette = intArrayOf(
-        Color.rgb(83, 190, 139), Color.rgb(93, 164, 226),
-        Color.rgb(246, 183, 91), Color.rgb(204, 137, 211),
-        Color.rgb(239, 119, 126), Color.rgb(103, 199, 198)
+        Color.rgb(45, 205, 133), Color.rgb(54, 151, 245),
+        Color.rgb(255, 177, 53), Color.rgb(178, 105, 232),
+        Color.rgb(245, 91, 112), Color.rgb(35, 195, 190)
     )
     private val shapes = listOf(
         listOf(0 to 0),
@@ -543,16 +543,12 @@ class GardenGameView(context: Context) : View(context) {
         paint.style = Paint.Style.FILL
         paint.strokeCap = Paint.Cap.BUTT
 
-        // Pequenas árvores e pedras decorativas do mundo.
+        // Bosques 3D distribuídos em diferentes planos de profundidade.
         for (i in 0..9) {
             val x = w * (0.08f + (i % 5) * .205f)
             val y = h * (0.235f + (i / 5) * .255f)
-            paint.color = Color.rgb(104, 143, 78)
-            c.drawCircle(x, y, w*.026f, paint)
-            paint.color = Color.rgb(65, 119, 69)
-            c.drawCircle(x-w*.008f, y-w*.009f, w*.020f, paint)
-            paint.color = Color.rgb(116, 83, 52)
-            c.drawRect(x-w*.004f, y+w*.012f, x+w*.004f, y+w*.035f, paint)
+            drawTree3D(c,x,y+w*.012f,w*.050f,if(i%3==0)Color.rgb(38,119,69)else Color.rgb(53,151,72),.62f+(i%3)*.12f)
+            if(i%2==0)drawRock3D(c,x+w*.035f,y+w*.008f,w*.018f,w*.012f)
         }
 
         // Cabeçalho flutuante.
@@ -580,15 +576,19 @@ class GardenGameView(context: Context) : View(context) {
             val stage = gardenStages[i]
             val island = RectF(cx-w*.205f,cy-h*.078f,cx+w*.205f,cy+h*.078f)
 
-            // Ilha com sombra, borda de terra e interior verde.
-            paint.color = Color.argb(65,35,65,38)
-            c.drawOval(island.left+w*.012f,island.top+h*.014f,island.right+w*.012f,island.bottom+h*.014f,paint)
-            paint.color = Color.rgb(118,151,83)
-            c.drawOval(island.left,island.top,island.right,island.bottom,paint)
-            paint.color = Color.rgb(205,190,126)
-            c.drawOval(island.left+w*.012f,island.top+h*.008f,island.right-w*.012f,island.bottom-h*.008f,paint)
-            paint.color = regionColors[i]
-            c.drawOval(island.left+w*.021f,island.top+h*.014f,island.right-w*.021f,island.bottom-h*.014f,paint)
+            // Ilha flutuante com lateral de terra, borda de pedra e gramado elevado.
+            paint.color = Color.argb(75,24,48,30)
+            c.drawOval(island.left+w*.018f,island.top+h*.035f,island.right+w*.018f,island.bottom+h*.035f,paint)
+            paint.color = Color.rgb(104,73,48)
+            c.drawOval(island.left,island.top+h*.012f,island.right,island.bottom+h*.045f,paint)
+            paint.color = Color.rgb(164,130,78)
+            c.drawOval(island.left,island.top,island.right,island.bottom+h*.020f,paint)
+            paint.color = Color.rgb(219,201,145)
+            c.drawOval(island.left+w*.012f,island.top+h*.002f,island.right-w*.012f,island.bottom-h*.004f,paint)
+            paint.shader=LinearGradient(island.left,island.top,island.left,island.bottom,regionColors[i],Color.rgb(63,130,73),Shader.TileMode.CLAMP)
+            c.drawOval(island.left+w*.021f,island.top+h*.008f,island.right-w*.021f,island.bottom-h*.012f,paint);paint.shader=null
+            paint.color=Color.argb(90,255,255,225)
+            c.drawOval(island.left+w*.10f,island.top+h*.018f,island.left+w*.30f,island.top+h*.045f,paint)
 
             val scene = RectF(cx-w*.155f,cy-h*.061f,cx+w*.155f,cy+h*.040f)
             drawGardenMiniature(c,i,stage,scene)
