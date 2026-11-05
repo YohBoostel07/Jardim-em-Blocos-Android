@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.LinearGradient
+import android.graphics.RadialGradient
 import android.graphics.Paint
 import android.graphics.RectF
 import android.graphics.Shader
@@ -314,52 +315,82 @@ class GardenGameView(context: Context) : View(context) {
     }
 
     private fun drawGardenBackdrop(c: Canvas, w: Float, h: Float) {
-        paint.shader = LinearGradient(0f, 0f, 0f, h,
-            intArrayOf(Color.rgb(7, 29, 35), Color.rgb(10, 63, 55), Color.rgb(18, 91, 63), Color.rgb(31, 112, 70)),
-            floatArrayOf(0f, .38f, .72f, 1f), Shader.TileMode.CLAMP)
-        c.drawRect(0f, 0f, w, h, paint)
-        paint.shader = null
+        // Céu de fantasia com luz volumétrica.
+        paint.shader=LinearGradient(0f,0f,0f,h,intArrayOf(Color.rgb(87,190,225),Color.rgb(155,218,224),Color.rgb(232,220,166)),null,Shader.TileMode.CLAMP)
+        c.drawRect(0f,0f,w,h,paint);paint.shader=null
+        paint.shader=RadialGradient(w*.79f,h*.15f,w*.24f,intArrayOf(Color.rgb(255,255,219),Color.argb(95,255,235,157),Color.TRANSPARENT),null,Shader.TileMode.CLAMP)
+        c.drawCircle(w*.79f,h*.15f,w*.24f,paint);paint.shader=null
+        paint.color=Color.rgb(255,246,197);c.drawCircle(w*.79f,h*.15f,w*.052f,paint)
+        // Nuvens fofas em camadas.
+        for(i in 0..3){val x=w*(.08f+i*.29f);val y=h*(.12f+(i%2)*.075f);drawCloud3D(c,x,y,w*.13f,h*.035f)}
+        // Montanhas distantes com faces iluminadas.
+        val m1=android.graphics.Path().apply{moveTo(0f,h*.49f);lineTo(w*.18f,h*.25f);lineTo(w*.32f,h*.47f);lineTo(w*.49f,h*.20f);lineTo(w*.72f,h*.49f);lineTo(w*.88f,h*.30f);lineTo(w,h*.48f);lineTo(w,h);lineTo(0f,h);close()}
+        paint.color=Color.rgb(91,155,148);c.drawPath(m1,paint)
+        val snow=android.graphics.Path().apply{moveTo(w*.18f,h*.25f);lineTo(w*.135f,h*.315f);lineTo(w*.19f,h*.295f);lineTo(w*.235f,h*.34f);close();moveTo(w*.49f,h*.20f);lineTo(w*.445f,h*.285f);lineTo(w*.50f,h*.265f);lineTo(w*.55f,h*.31f);close()}
+        paint.color=Color.rgb(230,239,213);c.drawPath(snow,paint)
+        val hillBack=android.graphics.Path().apply{moveTo(0f,h*.57f);cubicTo(w*.25f,h*.38f,w*.42f,h*.62f,w*.63f,h*.47f);cubicTo(w*.82f,h*.35f,w*.92f,h*.52f,w,h*.43f);lineTo(w,h);lineTo(0f,h);close()}
+        paint.color=Color.rgb(83,166,105);c.drawPath(hillBack,paint)
+        val hillFront=android.graphics.Path().apply{moveTo(0f,h*.70f);cubicTo(w*.22f,h*.53f,w*.40f,h*.72f,w*.62f,h*.59f);cubicTo(w*.79f,h*.48f,w*.92f,h*.68f,w,h*.55f);lineTo(w,h);lineTo(0f,h);close()}
+        paint.shader=LinearGradient(0f,h*.53f,0f,h,intArrayOf(Color.rgb(104,190,105),Color.rgb(37,121,72),Color.rgb(19,83,57)),null,Shader.TileMode.CLAMP)
+        c.drawPath(hillFront,paint);paint.shader=null
+        // Trilha sinuosa com bordas em relevo.
+        val path=android.graphics.Path().apply{moveTo(w*.02f,h*.88f);cubicTo(w*.27f,h*.67f,w*.43f,h*.89f,w*.58f,h*.73f);cubicTo(w*.72f,h*.60f,w*.82f,h*.72f,w,h*.60f)}
+        paint.style=Paint.Style.STROKE;paint.strokeCap=Paint.Cap.ROUND;paint.strokeWidth=w*.105f;paint.color=Color.rgb(110,83,54);c.drawPath(path,paint)
+        paint.strokeWidth=w*.080f;paint.color=Color.rgb(221,184,116);c.drawPath(path,paint);paint.strokeWidth=w*.006f;paint.color=Color.argb(90,255,243,193);c.drawPath(path,paint);paint.style=Paint.Style.FILL;paint.strokeCap=Paint.Cap.BUTT
+        // Árvores em primeiro plano, cada uma com tronco facetado e copas esféricas.
+        for(i in 0..6){val x=w*(.035f+i*.155f);val y=h*(.69f+(i%3)*.075f);drawTree3D(c,x,y,w*(.10f+(i%2)*.018f),if(i%2==0)Color.rgb(55,151,75)else Color.rgb(43,129,73),.78f+(i%3)*.12f)}
+        // Arbustos, pedras e flores individuais.
+        for(i in 0..9){val x=w*((i*29%93)/100f);val y=h*(.69f+(i*13%24)/100f);drawBush3D(c,x,y,w*.035f);if(i%2==0)drawRock3D(c,x+w*.018f,y+h*.008f,w*.025f,h*.014f)}
+        for(i in 0..22){val x=w*((i*41%97)/100f);val y=h*(.60f+(i*17%34)/100f);drawFlower3D(c,x,y,w*.014f,when(i%4){0->Color.rgb(255,103,145);1->Color.rgb(255,220,93);2->Color.rgb(190,143,239);else->Color.WHITE})}
+        for(i in 0..15){val x=w*((i*31%95)/100f);val y=h*(.23f+(i*19%65)/100f);paint.color=Color.argb(155,255,243,163);c.drawCircle(x,y,w*.003f,paint);paint.color=Color.argb(55,255,255,207);c.drawCircle(x,y,w*.009f,paint)}
+    }
 
-        // Aurora suave e luzes mágicas no horizonte.
-        paint.color = Color.argb(24, 104, 255, 185)
-        c.drawOval(-w*.30f, h*.12f, w*.72f, h*.50f, paint)
-        paint.color = Color.argb(20, 255, 218, 125)
-        c.drawCircle(w*.82f, h*.16f, w*.27f, paint)
-        paint.color = Color.rgb(255, 224, 151)
-        c.drawCircle(w*.82f, h*.13f, w*.035f, paint)
-        paint.color = Color.argb(45, 255, 246, 200)
-        c.drawCircle(w*.82f, h*.13f, w*.065f, paint)
+    private fun drawCloud3D(c:Canvas,x:Float,y:Float,rx:Float,ry:Float){
+        paint.color=Color.argb(45,43,91,105);c.drawOval(x-rx,y-ry*.05f,x+rx,y+ry*1.35f,paint)
+        paint.shader=LinearGradient(x,y-ry,x,y+ry,Color.WHITE,Color.rgb(207,235,231),Shader.TileMode.CLAMP)
+        c.drawOval(x-rx,y-ry,x+rx,y+ry,paint);paint.shader=null
+        paint.color=Color.argb(125,255,255,255);c.drawCircle(x-rx*.35f,y-ry*.25f,ry*.65f,paint);c.drawCircle(x,y-ry*.40f,ry*.78f,paint)
+    }
 
-        val far = android.graphics.Path().apply {
-            moveTo(0f,h*.49f); cubicTo(w*.22f,h*.31f,w*.42f,h*.46f,w*.60f,h*.36f)
-            cubicTo(w*.78f,h*.27f,w*.90f,h*.39f,w,h*.31f); lineTo(w,h);lineTo(0f,h);close()
-        }
-        paint.color = Color.rgb(26, 91, 75); c.drawPath(far,paint)
-        val near = android.graphics.Path().apply {
-            moveTo(0f,h*.68f); cubicTo(w*.22f,h*.52f,w*.38f,h*.72f,w*.58f,h*.59f)
-            cubicTo(w*.78f,h*.48f,w*.88f,h*.67f,w,h*.54f); lineTo(w,h);lineTo(0f,h);close()
-        }
-        paint.color = Color.rgb(20, 77, 57); c.drawPath(near,paint)
+    private fun drawSphere3D(c:Canvas,x:Float,y:Float,rx:Float,ry:Float,base:Int){
+        val r=Color.red(base);val g=Color.green(base);val b=Color.blue(base)
+        paint.shader=RadialGradient(x-rx*.32f,y-ry*.42f,max(rx,ry)*1.45f,intArrayOf(Color.rgb(min(255,r+65),min(255,g+65),min(255,b+65)),base,Color.rgb(max(0,r-55),max(0,g-55),max(0,b-45))),floatArrayOf(0f,.58f,1f),Shader.TileMode.CLAMP)
+        c.drawOval(x-rx,y-ry,x+rx,y+ry,paint);paint.shader=null
+        paint.color=Color.argb(75,255,255,255);c.drawOval(x-rx*.58f,y-ry*.60f,x+rx*.08f,y-ry*.18f,paint)
+    }
 
-        // Silhuetas de árvores em diferentes planos.
-        for (i in 0..8) {
-            val x=w*(.025f+i*.12f); val base=h*(.72f+(i%3)*.055f)
-            val r=w*(.045f+(i%2)*.012f)
-            paint.color=Color.rgb(12,57,47)
-            c.drawRect(x-r*.12f,base-r*.15f,x+r*.12f,base+r*.55f,paint)
-            paint.color=if(i%2==0)Color.rgb(18,91,62) else Color.rgb(22,105,68)
-            c.drawCircle(x,base-r*.52f,r,paint)
-            paint.color=Color.argb(85,105,190,111)
-            c.drawCircle(x-r*.28f,base-r*.72f,r*.48f,paint)
-        }
-        // Pequenas flores e vaga-lumes.
-        for(i in 0..17){
-            val x=w*((i*37%97)/100f); val y=h*(.20f+(i*19%60)/100f)
-            paint.color=Color.argb(110+(i%3)*35,255,220,123)
-            c.drawCircle(x,y,w*.0035f,paint)
-        }
-        paint.color=Color.argb(45,220,255,220)
-        c.drawRect(0f,h*.93f,w,h,paint)
+    private fun drawTree3D(c:Canvas,x:Float,baseY:Float,size:Float,leafColor:Int,scale:Float=1f){
+        val hh=size*1.55f*scale;val trunk=size*.24f*scale
+        paint.color=Color.argb(65,15,45,27);c.drawOval(x-size*.72f,baseY-size*.10f,x+size*.72f,baseY+size*.18f,paint)
+        val trunkPath=android.graphics.Path().apply{moveTo(x-trunk*.35f,baseY);lineTo(x-trunk*.22f,baseY-hh*.62f);lineTo(x+trunk*.20f,baseY-hh*.62f);lineTo(x+trunk*.48f,baseY);close()}
+        paint.shader=LinearGradient(x-trunk,baseY-hh*.5f,x+trunk,baseY,Color.rgb(151,94,48),Color.rgb(75,48,35),Shader.TileMode.CLAMP);c.drawPath(trunkPath,paint);paint.shader=null
+        paint.color=Color.rgb(185,126,68);c.drawLine(x-trunk*.05f,baseY-hh*.16f,x-trunk*.12f,baseY-hh*.55f,paint)
+        drawSphere3D(c,x,baseY-hh*.82f,size*.76f,size*.70f,leafColor)
+        drawSphere3D(c,x-size*.48f,baseY-hh*.66f,size*.53f,size*.49f,leafColor)
+        drawSphere3D(c,x+size*.48f,baseY-hh*.66f,size*.53f,size*.49f,leafColor)
+        drawSphere3D(c,x-size*.10f,baseY-hh*1.10f,size*.48f,size*.44f,leafColor)
+    }
+
+    private fun drawBush3D(c:Canvas,x:Float,y:Float,size:Float){
+        paint.color=Color.argb(55,20,53,29);c.drawOval(x-size,y-size*.12f,x+size,y+size*.25f,paint)
+        drawSphere3D(c,x-size*.38f,y-size*.22f,size*.55f,size*.47f,Color.rgb(47,142,71))
+        drawSphere3D(c,x+size*.28f,y-size*.30f,size*.62f,size*.52f,Color.rgb(67,166,77))
+        drawSphere3D(c,x,y-size*.52f,size*.56f,size*.50f,Color.rgb(79,180,82))
+    }
+
+    private fun drawRock3D(c:Canvas,x:Float,y:Float,rx:Float,ry:Float){
+        val p=android.graphics.Path().apply{moveTo(x-rx,y);lineTo(x-rx*.65f,y-ry*.72f);lineTo(x+rx*.15f,y-ry);lineTo(x+rx*.82f,y-ry*.55f);lineTo(x+rx,y);lineTo(x+rx*.5f,y+ry*.24f);lineTo(x-rx*.65f,y+ry*.18f);close()}
+        paint.color=Color.argb(65,25,50,40);c.drawOval(x-rx,y-ry*.12f,x+rx,y+ry*.42f,paint)
+        paint.shader=LinearGradient(x-rx,y-ry,x+rx,y+ry,Color.rgb(205,211,187),Color.rgb(91,111,100),Shader.TileMode.CLAMP);c.drawPath(p,paint);paint.shader=null
+        paint.color=Color.argb(100,255,255,240);c.drawLine(x-rx*.45f,y-ry*.48f,x+rx*.10f,y-ry*.78f,paint)
+    }
+
+    private fun drawFlower3D(c:Canvas,x:Float,y:Float,size:Float,petalColor:Int){
+        paint.color=Color.argb(55,20,53,25);c.drawOval(x-size*.7f,y-size*.08f,x+size*.7f,y+size*.30f,paint)
+        paint.color=Color.rgb(47,126,57);paint.strokeWidth=max(1.5f,size*.12f);c.drawLine(x,y,x-size*.10f,y-size*1.35f,paint);paint.strokeWidth=1f
+        paint.color=Color.rgb(83,181,79);c.drawOval(x-size*.85f,y-size*.78f,x-size*.12f,y-size*.35f,paint);c.drawOval(x+size*.12f,y-size*1.02f,x+size*.82f,y-size*.60f,paint)
+        for(i in 0..5){val a=(Math.PI*2*i/6).toFloat();val px=x+kotlin.math.cos(a)*size*.46f;val py=y-size*1.38f+kotlin.math.sin(a)*size*.46f;drawSphere3D(c,px,py,size*.34f,size*.31f,petalColor)}
+        drawSphere3D(c,x,y-size*1.38f,size*.23f,size*.22f,Color.rgb(255,195,55))
     }
 
     private fun drawHeader(c: Canvas, w: Float, h: Float) {
@@ -402,16 +433,37 @@ class GardenGameView(context: Context) : View(context) {
     }
 
     private fun drawGardenMiniature(c: Canvas,index:Int,stage:Int,rect:RectF){
-        val sky=when(index){0->Color.rgb(174,218,239);1->Color.rgb(161,205,180);else->Color.rgb(168,218,222)};val grass=when(index){0->Color.rgb(123,166,91);1->Color.rgb(85,139,91);else->Color.rgb(115,167,145)}
-        rounded(c,rect,16f,sky);paint.color=Color.argb(95,255,255,255);c.drawCircle(rect.left+rect.width()*.18f,rect.top+rect.height()*.20f,rect.width()*.09f,paint);c.drawCircle(rect.left+rect.width()*.25f,rect.top+rect.height()*.17f,rect.width()*.075f,paint);c.drawCircle(rect.left+rect.width()*.32f,rect.top+rect.height()*.21f,rect.width()*.08f,paint)
-        paint.color=Color.rgb(103,150,113);c.drawOval(rect.left-rect.width()*.08f,rect.top+rect.height()*.47f,rect.left+rect.width()*.53f,rect.bottom+rect.height()*.10f,paint);paint.color=grass;c.drawOval(rect.left+rect.width()*.30f,rect.top+rect.height()*.53f,rect.right+rect.width()*.12f,rect.bottom+rect.height()*.16f,paint)
-        if(index==2){paint.color=Color.rgb(68,151,184);c.drawOval(rect.left+rect.width()*.12f,rect.top+rect.height()*.57f,rect.right-rect.width()*.08f,rect.bottom+rect.height()*.08f,paint);paint.color=Color.argb(115,255,255,255);c.drawOval(rect.left+rect.width()*.30f,rect.top+rect.height()*.66f,rect.left+rect.width()*.62f,rect.top+rect.height()*.73f,paint)}
-        if(index==1){paint.color=Color.rgb(91,129,73);c.drawCircle(rect.left+rect.width()*.22f,rect.top+rect.height()*.43f,rect.width()*.15f,paint);c.drawCircle(rect.left+rect.width()*.78f,rect.top+rect.height()*.40f,rect.width()*.18f,paint)}
-        if(stage>=1){val x=rect.left+rect.width()*.50f;val y=rect.top+rect.height()*.79f;paint.color=Color.rgb(75,119,60);paint.strokeWidth=max(2f,rect.width()*.018f);c.drawLine(x,y,x,rect.top+rect.height()*.39f,paint);c.drawOval(x-rect.width()*.17f,rect.top+rect.height()*.48f,x,rect.top+rect.height()*.61f,paint);c.drawOval(x,rect.top+rect.height()*.43f,x+rect.width()*.17f,rect.top+rect.height()*.56f,paint)}
-        if(stage>=2){val tx=if(index==0)rect.left+rect.width()*.77f else rect.left+rect.width()*.25f;val ty=rect.top+rect.height()*.53f;paint.color=Color.rgb(112,78,48);c.drawRoundRect(tx-rect.width()*.025f,ty,tx+rect.width()*.025f,rect.bottom-rect.height()*.10f,4f,4f,paint);paint.color=if(index==1)Color.rgb(43,111,67)else Color.rgb(62,139,77);c.drawCircle(tx,ty-rect.height()*.10f,rect.width()*.16f,paint);c.drawCircle(tx-rect.width()*.09f,ty,rect.width()*.12f,paint);c.drawCircle(tx+rect.width()*.09f,ty,rect.width()*.12f,paint)}
-        if(stage>=3){val fc=intArrayOf(Color.rgb(245,118,142),Color.rgb(255,215,94),Color.WHITE,Color.rgb(185,145,220));for(i in 0..3){val fx=rect.left+rect.width()*(.16f+i*.20f);val fy=rect.top+rect.height()*(.78f-(i%2)*.08f);paint.color=fc[i];c.drawCircle(fx,fy,rect.width()*.045f,paint);paint.color=Color.rgb(255,224,123);c.drawCircle(fx,fy,rect.width()*.018f,paint)}}
-        paint.strokeWidth=1f
+        val sky=when(index){0->Color.rgb(133,207,235);1->Color.rgb(145,205,184);else->Color.rgb(123,205,220)}
+        val grass=when(index){0->Color.rgb(102,183,91);1->Color.rgb(71,151,88);else->Color.rgb(77,164,130)}
+        paint.shader=LinearGradient(rect.left,rect.top,rect.left,rect.bottom,sky,Color.rgb(218,231,176),Shader.TileMode.CLAMP)
+        c.drawRoundRect(rect,18f,18f,paint);paint.shader=null
+        drawSphere3D(c,rect.right-rect.width()*.17f,rect.top+rect.height()*.19f,rect.width()*.075f,rect.height()*.12f,Color.rgb(255,220,116))
+        val far=android.graphics.Path().apply{moveTo(rect.left,rect.top+rect.height()*.60f);cubicTo(rect.left+rect.width()*.25f,rect.top+rect.height()*.25f,rect.left+rect.width()*.50f,rect.top+rect.height()*.55f,rect.right,rect.top+rect.height()*.38f);lineTo(rect.right,rect.bottom);lineTo(rect.left,rect.bottom);close()}
+        paint.color=Color.rgb(99,166,111);c.drawPath(far,paint)
+        val land=android.graphics.Path().apply{moveTo(rect.left,rect.top+rect.height()*.66f);cubicTo(rect.left+rect.width()*.30f,rect.top+rect.height()*.46f,rect.left+rect.width()*.58f,rect.top+rect.height()*.75f,rect.right,rect.top+rect.height()*.52f);lineTo(rect.right,rect.bottom);lineTo(rect.left,rect.bottom);close()}
+        paint.shader=LinearGradient(rect.left,rect.top+rect.height()*.5f,rect.left,rect.bottom,Color.rgb(133,201,100),grass,Shader.TileMode.CLAMP);c.drawPath(land,paint);paint.shader=null
+        if(index==2){
+            val water=android.graphics.Path().apply{moveTo(rect.left+rect.width()*.06f,rect.top+rect.height()*.70f);cubicTo(rect.left+rect.width()*.38f,rect.top+rect.height()*.57f,rect.left+rect.width()*.62f,rect.top+rect.height()*.85f,rect.right-rect.width()*.04f,rect.top+rect.height()*.66f);lineTo(rect.right,rect.bottom);lineTo(rect.left,rect.bottom);close()}
+            paint.shader=LinearGradient(rect.left,rect.top+rect.height()*.62f,rect.left,rect.bottom,Color.rgb(105,213,226),Color.rgb(30,123,167),Shader.TileMode.CLAMP);c.drawPath(water,paint);paint.shader=null
+            paint.color=Color.argb(145,230,255,249);c.drawLine(rect.left+rect.width()*.38f,rect.top+rect.height()*.73f,rect.left+rect.width()*.62f,rect.top+rect.height()*.72f,paint)
+            c.drawLine(rect.left+rect.width()*.68f,rect.top+rect.height()*.80f,rect.left+rect.width()*.83f,rect.top+rect.height()*.78f,paint)
+        }
+        drawTree3D(c,rect.left+rect.width()*.19f,rect.top+rect.height()*.79f,rect.width()*.12f,Color.rgb(45,145,73),.66f)
+        drawTree3D(c,rect.left+rect.width()*.82f,rect.top+rect.height()*.72f,rect.width()*.14f,if(index==1)Color.rgb(39,112,69)else Color.rgb(61,157,78),.80f)
+        drawRock3D(c,rect.left+rect.width()*.43f,rect.top+rect.height()*.83f,rect.width()*.045f,rect.height()*.035f)
+        if(stage>=1){
+            for(i in 0..4){val x=rect.left+rect.width()*(.30f+i*.105f);val y=rect.top+rect.height()*(.78f-(i%2)*.05f);drawFlower3D(c,x,y,rect.width()*.025f,if(i%2==0)Color.rgb(255,117,153)else Color.rgb(255,218,91))}
+        }
+        if(stage>=2){
+            drawTree3D(c,rect.left+rect.width()*.53f,rect.top+rect.height()*.78f,rect.width()*.15f,Color.rgb(45,157,69),1.05f)
+            for(i in 0..5){val x=rect.left+rect.width()*(.10f+i*.15f);drawBush3D(c,x,rect.top+rect.height()*.92f,rect.width()*.045f)}
+        }
+        if(stage>=3){
+            for(i in 0..10){val x=rect.left+rect.width()*(.07f+i*.085f);drawFlower3D(c,x,rect.top+rect.height()*.94f,rect.width()*.022f,when(i%4){0->Color.rgb(255,105,145);1->Color.rgb(255,222,87);2->Color.rgb(188,137,236);else->Color.WHITE})}
+            for(i in 0..3){paint.color=Color.argb(180,255,245,174);c.drawCircle(rect.left+rect.width()*(.2f+i*.2f),rect.top+rect.height()*(.3f+(i%2)*.12f),rect.width()*.008f,paint)}
+        }
     }
+
     private fun drawGardenDetailScreen(c: Canvas, w: Float, h: Float) {
         drawDim(c,w,h)
         drawPremiumCard(c,RectF(w*.045f,h*.055f,w*.955f,h*.945f),30f,Color.rgb(247,239,207),Color.rgb(207,220,181))
@@ -679,16 +731,22 @@ class GardenGameView(context: Context) : View(context) {
     }
 
     private fun drawBlock(c: Canvas, rect: RectF, base: Int, radius: Float, alpha: Int = 255) {
-        paint.color=Color.argb(alpha/2,0,0,0)
-        c.drawRoundRect(RectF(rect.left+2f,rect.top+4f,rect.right+2f,rect.bottom+4f),radius,radius,paint)
-        paint.shader=LinearGradient(rect.left,rect.top,rect.right,rect.bottom,
-            intArrayOf(withAlpha(base,alpha),withAlpha(Color.rgb(255,255,255),min(alpha,75)),withAlpha(base,alpha)),
-            floatArrayOf(0f,.22f,1f),Shader.TileMode.CLAMP)
-        c.drawRoundRect(rect,radius,radius,paint);paint.shader=null
-        paint.color=withAlpha(Color.WHITE,min(alpha,105))
-        c.drawRoundRect(RectF(rect.left+radius*.65f,rect.top+radius*.38f,rect.right-radius*.65f,rect.top+radius*.38f+max(2f,rect.height()*.055f)),radius,radius,paint)
-        paint.color=withAlpha(Color.rgb(10,35,30),min(alpha,65))
-        c.drawRoundRect(RectF(rect.left+radius*.5f,rect.bottom-radius*.32f,rect.right-radius*.5f,rect.bottom-radius*.13f),radius,radius,paint)
+        val d=min(rect.width(),rect.height())*.17f
+        // Sombra projetada e faces laterais: cada peça é um pequeno cubo.
+        paint.color=Color.argb(alpha/2,5,24,22)
+        c.drawRoundRect(RectF(rect.left+d*.35f,rect.top+d*1.45f,rect.right+d*.7f,rect.bottom+d*1.45f),radius,radius,paint)
+        val right=android.graphics.Path().apply{moveTo(rect.right-d,rect.top+d*.48f);lineTo(rect.right,rect.top);lineTo(rect.right,rect.bottom-d*.55f);lineTo(rect.right-d,rect.bottom);close()}
+        paint.color=withAlpha(Color.rgb(max(0,Color.red(base)-65),max(0,Color.green(base)-65),max(0,Color.blue(base)-65)),alpha);c.drawPath(right,paint)
+        val bottom=android.graphics.Path().apply{moveTo(rect.left+d,rect.bottom-d*.55f);lineTo(rect.right,rect.bottom-d*.55f);lineTo(rect.right-d,rect.bottom);lineTo(rect.left,rect.bottom);close()}
+        paint.color=withAlpha(Color.rgb(max(0,Color.red(base)-85),max(0,Color.green(base)-85),max(0,Color.blue(base)-85)),alpha);c.drawPath(bottom,paint)
+        val top=android.graphics.Path().apply{moveTo(rect.left+d,rect.top);lineTo(rect.right,rect.top);lineTo(rect.right-d,rect.top+d);lineTo(rect.left,rect.top+d);close()}
+        paint.shader=LinearGradient(rect.left,rect.top,rect.right,rect.top,withAlpha(Color.rgb(min(255,Color.red(base)+55),min(255,Color.green(base)+55),min(255,Color.blue(base)+55)),alpha),withAlpha(base,alpha),Shader.TileMode.CLAMP)
+        c.drawPath(top,paint);paint.shader=null
+        paint.color=withAlpha(Color.argb(90,255,255,255),alpha)
+        c.drawLine(rect.left+d,rect.top+1f,rect.right-2f,rect.top+1f,paint)
+        c.drawLine(rect.left+d*.45f,rect.top+d*.45f,rect.left+d,rect.top+1f,paint)
+        paint.color=withAlpha(Color.argb(65,255,255,255),alpha)
+        c.drawCircle(rect.left+d*1.25f,rect.top+d*.48f,d*.12f,paint)
     }
 
     private fun drawPiece(c: Canvas, piece: Piece, cx: Float, cy: Float, size: Float) {
