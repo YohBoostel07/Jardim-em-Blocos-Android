@@ -424,7 +424,7 @@ class GardenGameView(context: Context) : View(context) {
             playTone(if (lines >= 3) ToneGenerator.TONE_PROP_ACK else ToneGenerator.TONE_PROP_BEEP, 180)
             performHapticFeedback(android.view.HapticFeedbackConstants.CONFIRM)
         } else {
-            playTone(ToneGenerator.TONE_PROP_CLICK, 55)
+            playTone(ToneGenerator.TONE_PROP_BEEP, 55)
             performHapticFeedback(android.view.HapticFeedbackConstants.KEYBOARD_TAP)
         }
 
