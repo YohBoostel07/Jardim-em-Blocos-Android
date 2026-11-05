@@ -826,25 +826,6 @@ class GardenGameView(context: Context) : View(context) {
         invalidate()
     }
 
-    private fun drawPiece(c: Canvas, piece: Piece, cx: Float, cy: Float, size: Float) {
-        val maxX=piece.cells.maxOf{it.first}+1;val maxY=piece.cells.maxOf{it.second}+1
-        val unit=min(size*2.35f/maxX,size*2.35f/maxY)
-        piece.cells.forEach{(x,y)->val left=cx-maxX*unit/2f+x*unit;val top=cy-maxY*unit/2f+y*unit;drawBlock(c,RectF(left,top,left+unit-3f,top+unit-3f),piece.color,7f)}
-    }
-
-    private fun drawBlock(c: Canvas, rect: RectF, base: Int, radius: Float, alpha: Int = 255) {
-        paint.color=Color.argb(alpha/2,0,0,0)
-        c.drawRoundRect(RectF(rect.left+2f,rect.top+4f,rect.right+2f,rect.bottom+4f),radius,radius,paint)
-        paint.shader=LinearGradient(rect.left,rect.top,rect.right,rect.bottom,
-            intArrayOf(withAlpha(base,alpha),withAlpha(Color.rgb(255,255,255),min(alpha,75)),withAlpha(base,alpha)),
-            floatArrayOf(0f,.22f,1f),Shader.TileMode.CLAMP)
-        c.drawRoundRect(rect,radius,radius,paint);paint.shader=null
-        paint.color=withAlpha(Color.WHITE,min(alpha,105))
-        c.drawRoundRect(RectF(rect.left+radius*.65f,rect.top+radius*.38f,rect.right-radius*.65f,rect.top+radius*.38f+max(2f,rect.height()*.055f)),radius,radius,paint)
-        paint.color=withAlpha(Color.rgb(10,35,30),min(alpha,65))
-        c.drawRoundRect(RectF(rect.left+radius*.5f,rect.bottom-radius*.32f,rect.right-radius*.5f,rect.bottom-radius*.13f),radius,radius,paint)
-    }
-
     private fun drawSparks(c: Canvas) {
         val t = effectProgress
         blastCenters.forEach { blast ->
