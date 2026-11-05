@@ -179,7 +179,7 @@ class GardenGameView(context: Context) : View(context) {
         paint.color=Color.argb(85,7,30,39);c.drawRoundRect(logo,32f,32f,paint)
         paint.style=Paint.Style.STROKE;paint.strokeWidth=2f;paint.color=Color.argb(155,218,246,219);c.drawRoundRect(logo,32f,32f,paint);paint.style=Paint.Style.FILL
         paint.textAlign=Paint.Align.CENTER
-        paint.typeface=Typeface.create("sans-serif-rounded",Typeface.BLACK)
+        paint.typeface=Typeface.create("sans-serif-rounded",Typeface.BOLD)
         paint.color=Color.rgb(255,239,190);paint.textSize=w*.105f
         paint.setShadowLayer(10f,0f,4f,Color.argb(180,0,0,0))
         c.drawText("JARDIM",w*.5f,h*.125f,paint)
@@ -203,7 +203,7 @@ class GardenGameView(context: Context) : View(context) {
 
         val play=RectF(w*.13f,h*.625f,w*.87f,h*.725f)
         drawPremiumCard(c,play,25f,Color.rgb(255,239,164),Color.rgb(236,157,54))
-        paint.color=Color.rgb(61,68,42);paint.textSize=w*.050f;paint.typeface=Typeface.create("sans-serif-rounded",Typeface.BLACK)
+        paint.color=Color.rgb(61,68,42);paint.textSize=w*.050f;paint.typeface=Typeface.create("sans-serif-rounded",Typeface.BOLD)
         c.drawText("▶  JOGAR",play.centerX(),play.centerY()+w*.016f,paint)
 
         val buttons=listOf(
@@ -215,7 +215,7 @@ class GardenGameView(context: Context) : View(context) {
         val fills=listOf(Color.rgb(42,119,91),Color.rgb(66,102,158),Color.rgb(151,105,55))
         for(i in buttons.indices){
             val r=buttons[i]
-            drawPremiumCard(c,r,20f,fills[i],Color.rgb(Color.red(fills[i])*.68f.toInt(),Color.green(fills[i])*.68f.toInt(),Color.blue(fills[i])*.68f.toInt()))
+            drawPremiumCard(c,r,20f,fills[i],Color.rgb((Color.red(fills[i])*.68f).toInt(),(Color.green(fills[i])*.68f).toInt(),(Color.blue(fills[i])*.68f).toInt()))
             paint.textAlign=Paint.Align.CENTER;paint.color=Color.WHITE
             paint.textSize=w*.040f;paint.typeface=Typeface.create("sans-serif-rounded",Typeface.BOLD)
             c.drawText(icons[i],r.centerX(),r.top+h*.040f,paint)
@@ -366,7 +366,7 @@ class GardenGameView(context: Context) : View(context) {
         paint.color=Color.argb(112,5,27,35);c.drawRoundRect(top,26f,26f,paint)
         paint.style=Paint.Style.STROKE;paint.strokeWidth=1.5f;paint.color=Color.argb(100,207,245,223);c.drawRoundRect(top,26f,26f,paint);paint.style=Paint.Style.FILL
         paint.textAlign=Paint.Align.CENTER
-        paint.typeface=Typeface.create("sans-serif-rounded",Typeface.BLACK)
+        paint.typeface=Typeface.create("sans-serif-rounded",Typeface.BOLD)
         paint.color=Color.rgb(255,235,173);paint.textSize=w*.052f
         c.drawText("JARDIM EM BLOCOS",w*.5f,h*.073f,paint)
         paint.typeface=Typeface.create("sans-serif",Typeface.BOLD)
@@ -385,7 +385,7 @@ class GardenGameView(context: Context) : View(context) {
         if(lp>0f)drawPremiumCard(c,RectF(lb.left,lb.top,lb.left+lb.width()*lp,lb.bottom),5f,Color.rgb(255,230,143),Color.rgb(232,161,63))
         val shopButton=RectF(w*.715f,h*.125f,w*.835f,h*.205f)
         drawPremiumCard(c,shopButton,17f,Color.rgb(255,220,133),Color.rgb(190,125,49))
-        paint.color=Color.rgb(55,62,38);paint.textSize=w*.027f;paint.typeface=Typeface.create("sans-serif-rounded",Typeface.BLACK)
+        paint.color=Color.rgb(55,62,38);paint.textSize=w*.027f;paint.typeface=Typeface.create("sans-serif-rounded",Typeface.BOLD)
         c.drawText("LOJA",shopButton.centerX(),shopButton.centerY()+w*.010f,paint)
         val button=RectF(w*.855f,h*.125f,w*.965f,h*.205f)
         drawPremiumCard(c,button,17f,Color.rgb(43,114,103),Color.rgb(8,48,55))
@@ -661,7 +661,7 @@ class GardenGameView(context: Context) : View(context) {
             if(piece!=null&&!(dragging&&i==selected))drawPiece(c,piece,centerX,trayCenterY-h*.004f,min(cell*.37f,h*.025f))
             else if(piece==null){paint.color=Color.argb(180,235,247,232);paint.textSize=w*.045f;c.drawText("✓",centerX,trayCenterY+h*.012f,paint)}
         }
-        if(comboAlpha>0f){paint.color=withAlpha(Color.rgb(255,225,137),(comboAlpha*255).toInt());paint.textSize=w*.040f;paint.typeface=Typeface.create("sans-serif-rounded",Typeface.BLACK);c.drawText(comboLabel,w*.5f,trayCenterY+h*.105f,paint)}
+        if(comboAlpha>0f){paint.color=withAlpha(Color.rgb(255,225,137),(comboAlpha*255).toInt());paint.textSize=w*.040f;paint.typeface=Typeface.create("sans-serif-rounded",Typeface.BOLD);c.drawText(comboLabel,w*.5f,trayCenterY+h*.105f,paint)}
     }
 
     private fun drawFooter(c: Canvas, w: Float, h: Float) {
