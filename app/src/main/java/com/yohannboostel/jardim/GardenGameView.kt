@@ -181,7 +181,7 @@ class GardenGameView(context: Context) : View(context) {
     paint.color=Color.argb(235,255,225,129);c.drawCircle(w*.80f,h*.105f,w*.055f,paint)
     val title=RectF(w*.09f,h*.035f,w*.91f,h*.235f)
     drawPremiumCard(c,title,34f,Color.argb(225,31,91,71),Color.argb(220,13,55,53))
-    paint.textAlign=Paint.Align.CENTER;paint.typeface=Typeface.create("sans-serif-rounded",Typeface.BLACK)
+    paint.textAlign=Paint.Align.CENTER;paint.typeface=Typeface.create("sans-serif-rounded",Typeface.BOLD)
     paint.color=Color.rgb(255,244,194);paint.textSize=w*.105f;paint.setShadowLayer(5f,0f,4f,Color.argb(150,0,0,0))
     c.drawText("JARDIM",w*.5f,h*.125f,paint);paint.clearShadowLayer()
     paint.color=Color.WHITE;paint.textSize=w*.064f;paint.typeface=Typeface.create("sans-serif-rounded",Typeface.BOLD)
