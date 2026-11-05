@@ -1072,7 +1072,7 @@ class GardenGameView(context: Context) : View(context) {
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
         if (event.action == MotionEvent.ACTION_DOWN) {
-            if (mainMenuOpen || showTutorial || paused || gameOver || confirmRestart || showGardens || showShop) return true
+            if (mainMenuOpen || showTutorial || paused || gameOver || confirmRestart || showGardens || showShop || showExpeditionComplete) return true
             if (event.y < height * .22f && event.x > width * .82f) return true
             if (event.y > trayCenterY - height * .06f && event.y < trayCenterY + height * .06f) {
                 choosePieceAt(event.x)
