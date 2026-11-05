@@ -413,10 +413,10 @@ class GardenGameView(context: Context) : View(context) {
         c.drawText("JARDIM 3D • ETAPA $stage DE 3",w*.5f,h*.39f,paint)
         paint.textSize=w*.023f;paint.color=Color.rgb(220,240,215)
         c.drawText(gardenDescriptions[index],w*.5f,h*.435f,paint)
-        val progress=RectF(w*.18f,h*.535f,w*.82f,h*.555f)
+        val progress=RectF(w*.18f,h*.705f,w*.82f,h*.725f)
         rounded(c,progress,10f,Color.argb(170,190,204,169))
         if(stage>0)drawPremiumCard(c,RectF(progress.left,progress.top,progress.left+progress.width()*stage/3f,progress.bottom),9f,Color.rgb(129,191,107),Color.rgb(59,139,76))
-        val action=RectF(w*.18f,h*.63f,w*.82f,h*.72f)
+        val action=RectF(w*.18f,h*.755f,w*.82f,h*.835f)
         val canRestore=unlocked&&stage<3&&coins>=gardenCosts[index][stage]
         val label=when{!unlocked->"JARDIM BLOQUEADO";stage>=3->"JARDIM RESTAURADO!";else->"RESTAURAR  •  "+gardenCosts[index][stage]+" MOEDAS"}
         drawPremiumCard(c,action,19f,if(canRestore)Color.rgb(105,177,103)else Color.rgb(184,195,165),if(canRestore)Color.rgb(44,121,71)else Color.rgb(140,157,130))
