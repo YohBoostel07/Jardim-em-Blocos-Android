@@ -21,6 +21,7 @@ import kotlin.math.min
 import kotlin.random.Random
 import java.text.SimpleDateFormat
 import java.util.Date
+import java.util.Calendar
 import java.util.Locale
 
 class GardenGameView(context: Context) : View(context) {
@@ -70,6 +71,9 @@ class GardenGameView(context: Context) : View(context) {
     private var bestCombo = prefs.getInt("best_combo", 0)
     private var mainMenuOpen = true
     private var showAchievements = false
+    private var showDailyRewards = false
+    private var dailyRewardStreak = prefs.getInt("daily_reward_streak", 0).coerceIn(0, 7)
+    private var dailyRewardLastClaim = prefs.getString("daily_reward_last_claim", "") ?: ""
     private var showExpeditions = false
     private var expeditionUnlocked = prefs.getInt("expedition_unlocked", 0).coerceIn(0, 5)
     private var expeditionStage = 0
@@ -141,6 +145,7 @@ class GardenGameView(context: Context) : View(context) {
             when {
                 showAchievements -> drawAchievementsScreen(canvas, w, h)
                 showExpeditions -> drawExpeditionsScreen(canvas, w, h)
+                showDailyRewards -> drawDailyRewardsScreen(canvas, w, h)
                 else -> drawMainMenu(canvas, w, h)
             }
             return
@@ -199,7 +204,8 @@ class GardenGameView(context: Context) : View(context) {
     for(i in rs.indices){drawPremiumCard(c,rs[i],22f,tops[i],bots[i]);paint.color=Color.WHITE;paint.textSize=w*.044f;paint.typeface=Typeface.create("sans-serif-rounded",Typeface.BOLD);c.drawText(icons[i],rs[i].centerX(),rs[i].top+h*.043f,paint);paint.textSize=w*.021f;c.drawText(labels[i],rs[i].centerX(),rs[i].bottom-h*.018f,paint)}
     val info=RectF(w*.17f,h*.85f,w*.83f,h*.925f);drawPremiumCard(c,info,24f,Color.argb(225,30,86,65),Color.argb(225,12,48,48))
     paint.color=Color.rgb(255,232,158);paint.textSize=w*.026f;paint.typeface=Typeface.create("sans-serif-rounded",Typeface.BOLD)
-    c.drawText("✦  $coins MOEDAS     •     RECORDE $best",w*.5f,h*.895f,paint)
+    c.drawText("✦  $coins MOEDAS     •     RECORDE $best",w*.5f,h*.888f,paint)
+    paint.textSize=w*.017f;paint.color=Color.rgb(225,247,207);c.drawText("TOQUE AQUI PARA RECOMPENSAS DIÁRIAS",w*.5f,h*.912f,paint)
     paint.color=Color.WHITE;paint.textSize=w*.020f;paint.typeface=Typeface.create("sans-serif",Typeface.NORMAL)
     c.drawText("UM MUNDO INTEIRO PARA FLORESCER",w*.5f,h*.955f,paint)
 }
@@ -238,6 +244,91 @@ class GardenGameView(context: Context) : View(context) {
         val back=RectF(w*.22f,h*.84f,w*.78f,h*.91f)
         drawPremiumCard(c,back,17f,Color.rgb(72,151,94),Color.rgb(34,103,67))
         paint.color=Color.WHITE;paint.textSize=w*.028f;c.drawText("VOLTAR AO MENU",back.centerX(),back.centerY()+w*.01f,paint)
+    }
+
+    private fun drawDailyRewardsScreen(c: Canvas, w: Float, h: Float) {
+        drawGardenWorldBackground(c, w, h)
+        paint.color = Color.argb(145, 12, 48, 42)
+        c.drawRect(0f, 0f, w, h, paint)
+        val panel = RectF(w*.045f, h*.075f, w*.955f, h*.925f)
+        drawPremiumCard(c, panel, 30f, Color.rgb(250,244,218), Color.rgb(204,224,181))
+        paint.textAlign = Paint.Align.CENTER
+        paint.typeface = Typeface.create("serif", Typeface.BOLD)
+        paint.color = Color.rgb(47,91,64)
+        paint.textSize = w*.058f
+        c.drawText("PRESENTES DIÁRIOS", w*.5f, h*.145f, paint)
+        paint.typeface = Typeface.create("sans-serif", Typeface.NORMAL)
+        paint.textSize = w*.025f
+        paint.color = Color.rgb(100,116,83)
+        c.drawText("Entre todos os dias e receba moedas para cultivar", w*.5f, h*.185f, paint)
+        val claimed = dailyRewardLastClaim == dailyRewardTodayKey()
+        val nextDay = if (claimed) dailyRewardStreak.coerceAtLeast(1) else dailyRewardNextDay()
+        val rewards = intArrayOf(25,35,50,65,80,100,150)
+        paint.typeface = Typeface.create("sans-serif-rounded", Typeface.BOLD)
+        paint.textSize = w*.032f
+        paint.color = Color.rgb(65,112,69)
+        c.drawText("SEQUÊNCIA: $dailyRewardStreak dia(s)", w*.5f, h*.245f, paint)
+        for (i in 0..6) {
+            val col = if (i < 4) i else i-4
+            val row = if (i < 4) 0 else 1
+            val left = if (row == 0) w*(.075f + col*.215f) else w*(.18f + col*.215f)
+            val top = if (row == 0) h*.30f else h*.49f
+            val rect = RectF(left, top, left+w*.18f, top+h*.145f)
+            val done = claimed && i < dailyRewardStreak
+            val active = !claimed && i == nextDay-1
+            drawPremiumCard(c, rect, 17f,
+                if (done) Color.rgb(169,218,143) else if (active) Color.rgb(255,224,132) else Color.rgb(224,225,198),
+                if (done) Color.rgb(91,166,91) else if (active) Color.rgb(225,164,68) else Color.rgb(194,205,174))
+            paint.color = if (done || active) Color.rgb(69,103,51) else Color.rgb(116,126,99)
+            paint.typeface = Typeface.create("sans-serif-rounded", Typeface.BOLD)
+            paint.textSize = w*.024f
+            c.drawText(if (done) "✓" else "DIA ${i+1}", rect.centerX(), top+h*.043f, paint)
+            paint.textSize = w*.030f
+            c.drawText("+${rewards[i]}", rect.centerX(), top+h*.095f, paint)
+            paint.textSize = w*.018f
+            c.drawText("MOEDAS", rect.centerX(), top+h*.125f, paint)
+        }
+        val nextReward = rewards[nextDay-1]
+        val claim = RectF(w*.16f,h*.695f,w*.84f,h*.785f)
+        drawPremiumCard(c, claim, 24f,
+            if (claimed) Color.rgb(174,194,157) else Color.rgb(255,226,129),
+            if (claimed) Color.rgb(119,151,105) else Color.rgb(220,151,53))
+        paint.color = if (claimed) Color.WHITE else Color.rgb(75,76,42)
+        paint.textSize = w*.039f
+        paint.typeface = Typeface.create("sans-serif-rounded", Typeface.BOLD)
+        c.drawText(if (claimed) "PRESENTE RESGATADO HOJE" else "RESGATAR +$nextReward MOEDAS", w*.5f, claim.centerY()+w*.013f, paint)
+        val back = RectF(w*.27f,h*.825f,w*.73f,h*.89f)
+        drawPremiumCard(c, back, 18f, Color.rgb(80,157,96), Color.rgb(35,106,69))
+        paint.color = Color.WHITE
+        paint.textSize = w*.027f
+        c.drawText("VOLTAR AO MENU", back.centerX(), back.centerY()+w*.009f, paint)
+    }
+
+    private fun dailyRewardTodayKey(): String = SimpleDateFormat("yyyyMMdd", Locale.US).format(Date())
+
+    private fun dailyRewardYesterdayKey(): String {
+        val calendar = Calendar.getInstance()
+        calendar.add(Calendar.DAY_OF_YEAR, -1)
+        return SimpleDateFormat("yyyyMMdd", Locale.US).format(calendar.time)
+    }
+
+    private fun dailyRewardNextDay(): Int =
+        if (dailyRewardLastClaim == dailyRewardYesterdayKey()) (dailyRewardStreak % 7) + 1 else 1
+
+    private fun claimDailyReward() {
+        if (dailyRewardLastClaim == dailyRewardTodayKey()) return
+        val day = dailyRewardNextDay()
+        val rewards = intArrayOf(25,35,50,65,80,100,150)
+        coins += rewards[day-1]
+        dailyRewardStreak = day
+        dailyRewardLastClaim = dailyRewardTodayKey()
+        prefs.edit()
+            .putInt("daily_reward_streak", dailyRewardStreak)
+            .putString("daily_reward_last_claim", dailyRewardLastClaim)
+            .apply()
+        saveGardenProgress()
+        playTone(ToneGenerator.TONE_PROP_ACK, 180)
+        performHapticFeedback(android.view.HapticFeedbackConstants.CONFIRM)
     }
 
     private fun drawExpeditionsScreen(c: Canvas, w: Float, h: Float) {
@@ -1041,6 +1132,9 @@ class GardenGameView(context: Context) : View(context) {
                                 if (showTutorial) finishTutorial()
                             }
                         }
+                    } else if (showDailyRewards) {
+                        if (event.y in height*.695f..height*.80f) claimDailyReward()
+                        else if (event.y > height*.81f) showDailyRewards = false
                     } else if (showAchievements) {
                         if (event.y > height*.80f) showAchievements=false
                         else {
@@ -1058,6 +1152,7 @@ class GardenGameView(context: Context) : View(context) {
                             event.y in height*.75f..height*.85f && event.x<width*.36f -> {mainMenuOpen=false;showGardens=true}
                             event.y in height*.75f..height*.85f && event.x in width*.36f..width*.64f -> showExpeditions=true
                             event.y in height*.75f..height*.85f && event.x>width*.64f -> showAchievements=true
+                            event.y in height*.85f..height*.925f -> showDailyRewards=true
                         }
                     }
                     invalidate(); return true
