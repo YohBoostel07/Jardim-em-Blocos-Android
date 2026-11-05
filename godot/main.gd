@@ -399,15 +399,15 @@ func _try_place_at(screen_point: Vector2) -> void:
 func _place_piece(row: int, col: int) -> void:
 	var shape: Array = tray[selected_slot]
 	for p in shape:
-		var r := row + p.y
-		var c := col + p.x
+		var r: int = row + p.y
+		var c: int = col + p.x
 		if r < 0 or r >= GRID or c < 0 or c >= GRID or board[r][c]:
 			message_label.text = "Não cabe aqui! Tente outra posição."
 			return
 	var color_index := randi_range(0, BLOCK_COLORS.size() - 1)
 	for p in shape:
-		var r := row + p.y
-		var c := col + p.x
+		var r: int = row + p.y
+		var c: int = col + p.x
 		board[r][c] = true
 		block_nodes[r][c] = _create_block(r, c, color_index)
 	score += shape.size()
