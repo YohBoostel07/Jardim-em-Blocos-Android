@@ -169,59 +169,63 @@ class GardenGameView(context: Context) : View(context) {
     }
 
     private fun drawMainMenu(c: Canvas, w: Float, h: Float) {
-        // Moldura superior e assinatura do jogo.
-        val logo = RectF(w*.10f,h*.035f,w*.90f,h*.245f)
-        drawPremiumCard(c,logo,30f,Color.argb(205,7,38,37),Color.argb(175,12,67,53))
-        paint.textAlign=Paint.Align.CENTER
-        paint.typeface=Typeface.create("serif",Typeface.BOLD)
-        paint.color=Color.rgb(255,229,157)
-        paint.textSize=w*.105f
-        c.drawText("JARDIM",w*.5f,h*.125f,paint)
-        paint.typeface=Typeface.create("sans-serif-condensed",Typeface.BOLD)
-        paint.color=Color.WHITE
-        paint.textSize=w*.067f
-        c.drawText("EM BLOCOS",w*.5f,h*.195f,paint)
-        paint.color=Color.rgb(180,232,192)
-        paint.textSize=w*.022f
-        paint.typeface=Typeface.create("sans-serif",Typeface.BOLD)
-        c.drawText("✦  CULTIVE • COMBINE • FLORESÇA  ✦",w*.5f,h*.225f,paint)
+        // Menu editorial: o cenário 3D continua visível e a interface flutua sobre ele.
+        paint.shader=LinearGradient(0f,0f,0f,h,
+            intArrayOf(Color.argb(155,7,27,42),Color.argb(12,8,40,42),Color.argb(30,8,42,35),Color.argb(210,5,25,30)),
+            floatArrayOf(0f,.34f,.62f,1f),Shader.TileMode.CLAMP)
+        c.drawRect(0f,0f,w,h,paint);paint.shader=null
 
-        // Grande vitrine do mundo restaurável.
-        val hero=RectF(w*.075f,h*.285f,w*.925f,h*.565f)
-        paint.color=Color.argb(100,0,0,0);c.drawRoundRect(RectF(hero.left,hero.top+h*.012f,hero.right,hero.bottom+h*.012f),28f,28f,paint)
-        paint.color=Color.argb(105,12,53,43);c.drawRoundRect(hero,28f,28f,paint)
-        paint.style=Paint.Style.STROKE;paint.strokeWidth=3f;paint.color=Color.argb(190,255,238,178);c.drawRoundRect(hero,28f,28f,paint);paint.style=Paint.Style.FILL
-        paint.shader=LinearGradient(0f,hero.centerY(),0f,hero.bottom,
-            intArrayOf(Color.TRANSPARENT,Color.argb(220,5,35,30)),null,Shader.TileMode.CLAMP)
-        c.drawRoundRect(hero,28f,28f,paint);paint.shader=null
-        paint.color=Color.WHITE;paint.textSize=w*.031f;paint.typeface=Typeface.create("sans-serif-condensed",Typeface.BOLD)
-        c.drawText("UM MUNDO ESPERA POR VOCÊ",w*.5f,h*.525f,paint)
-        paint.textSize=w*.021f;paint.typeface=Typeface.create("sans-serif",Typeface.NORMAL)
-        c.drawText("Restaure jardins, conquiste terras e evolua",w*.5f,h*.551f,paint)
+        val logo=RectF(w*.12f,h*.035f,w*.88f,h*.225f)
+        paint.color=Color.argb(85,7,30,39);c.drawRoundRect(logo,32f,32f,paint)
+        paint.style=Paint.Style.STROKE;paint.strokeWidth=2f;paint.color=Color.argb(155,218,246,219);c.drawRoundRect(logo,32f,32f,paint);paint.style=Paint.Style.FILL
+        paint.textAlign=Paint.Align.CENTER
+        paint.typeface=Typeface.create("sans-serif-rounded",Typeface.BLACK)
+        paint.color=Color.rgb(255,239,190);paint.textSize=w*.105f
+        paint.setShadowLayer(10f,0f,4f,Color.argb(180,0,0,0))
+        c.drawText("JARDIM",w*.5f,h*.125f,paint)
+        paint.clearShadowLayer()
+        paint.typeface=Typeface.create("sans-serif-condensed",Typeface.BOLD)
+        paint.color=Color.WHITE;paint.textSize=w*.060f
+        c.drawText("EM BLOCOS",w*.5f,h*.190f,paint)
+        paint.color=Color.rgb(194,245,214);paint.textSize=w*.021f
+        paint.typeface=Typeface.create("sans-serif",Typeface.BOLD)
+        c.drawText("CULTIVE  •  COMBINE  •  FLORESÇA",w*.5f,h*.222f,paint)
+
+        // Legenda discreta sobre o cenário, sem esconder as árvores e o terreno.
+        val caption=RectF(w*.10f,h*.465f,w*.90f,h*.575f)
+        paint.shader=LinearGradient(caption.left,caption.top,caption.left,caption.bottom,
+            Color.TRANSPARENT,Color.argb(205,5,27,31),Shader.TileMode.CLAMP)
+        c.drawRoundRect(caption,22f,22f,paint);paint.shader=null
+        paint.color=Color.WHITE;paint.textSize=w*.030f;paint.typeface=Typeface.create("sans-serif-rounded",Typeface.BOLD)
+        c.drawText("SEU PRÓPRIO PARAÍSO",w*.5f,h*.520f,paint)
+        paint.color=Color.rgb(218,243,222);paint.textSize=w*.021f;paint.typeface=Typeface.create("sans-serif",Typeface.NORMAL)
+        c.drawText("Restaure jardins e transforme o mundo",w*.5f,h*.550f,paint)
 
         val play=RectF(w*.13f,h*.625f,w*.87f,h*.725f)
-        drawPremiumCard(c,play,25f,Color.rgb(255,231,159),Color.rgb(220,157,64))
-        paint.color=Color.rgb(58,66,39);paint.textSize=w*.052f;paint.typeface=Typeface.create("sans-serif-condensed",Typeface.BOLD)
-        c.drawText("▶  JOGAR",play.centerX(),play.centerY()+w*.017f,paint)
+        drawPremiumCard(c,play,25f,Color.rgb(255,239,164),Color.rgb(236,157,54))
+        paint.color=Color.rgb(61,68,42);paint.textSize=w*.050f;paint.typeface=Typeface.create("sans-serif-rounded",Typeface.BLACK)
+        c.drawText("▶  JOGAR",play.centerX(),play.centerY()+w*.016f,paint)
 
         val buttons=listOf(
             RectF(w*.055f,h*.755f,w*.345f,h*.845f),
             RectF(w*.355f,h*.755f,w*.645f,h*.845f),
             RectF(w*.655f,h*.755f,w*.945f,h*.845f))
-        val labels=listOf("MEUS JARDINS","EXPEDIÇÃO","CONQUISTAS")
+        val labels=listOf("JARDINS","EXPEDIÇÃO","CONQUISTAS")
         val icons=listOf("✿","✧","★")
+        val fills=listOf(Color.rgb(42,119,91),Color.rgb(66,102,158),Color.rgb(151,105,55))
         for(i in buttons.indices){
-            drawPremiumCard(c,buttons[i],18f,Color.rgb(244,237,206),Color.rgb(208,215,172))
-            paint.textAlign=Paint.Align.CENTER;paint.color=Color.rgb(55,105,70)
-            paint.textSize=w*.040f;paint.typeface=Typeface.create("serif",Typeface.BOLD)
-            c.drawText(icons[i],buttons[i].centerX(),buttons[i].top+h*.036f,paint)
-            paint.textSize=w*.021f;paint.typeface=Typeface.create("sans-serif-condensed",Typeface.BOLD)
-            c.drawText(labels[i],buttons[i].centerX(),buttons[i].bottom-h*.018f,paint)
+            val r=buttons[i]
+            drawPremiumCard(c,r,20f,fills[i],Color.rgb(Color.red(fills[i])*.68f.toInt(),Color.green(fills[i])*.68f.toInt(),Color.blue(fills[i])*.68f.toInt()))
+            paint.textAlign=Paint.Align.CENTER;paint.color=Color.WHITE
+            paint.textSize=w*.040f;paint.typeface=Typeface.create("sans-serif-rounded",Typeface.BOLD)
+            c.drawText(icons[i],r.centerX(),r.top+h*.040f,paint)
+            paint.textSize=w*.020f;paint.typeface=Typeface.create("sans-serif",Typeface.BOLD)
+            c.drawText(labels[i],r.centerX(),r.bottom-h*.018f,paint)
         }
-        drawPremiumCard(c,RectF(w*.20f,h*.875f,w*.80f,h*.925f),18f,Color.argb(215,8,43,38),Color.argb(195,14,69,53))
-        paint.color=Color.rgb(255,226,150);paint.textSize=w*.027f;paint.typeface=Typeface.create("sans-serif",Typeface.BOLD)
+        drawPremiumCard(c,RectF(w*.20f,h*.875f,w*.80f,h*.925f),18f,Color.argb(220,10,47,50),Color.argb(220,5,29,37))
+        paint.color=Color.rgb(255,231,157);paint.textSize=w*.025f;paint.typeface=Typeface.create("sans-serif",Typeface.BOLD)
         c.drawText("✦  $coins MOEDAS     •     RECORDE $best",w*.5f,h*.907f,paint)
-        paint.color=Color.argb(185,236,249,222);paint.textSize=w*.019f
+        paint.color=Color.argb(225,230,248,236);paint.textSize=w*.019f
         c.drawText("NÍVEL "+(1+best/500)+"  •  SUA JORNADA CONTINUA",w*.5f,h*.955f,paint)
     }
 
@@ -358,42 +362,43 @@ class GardenGameView(context: Context) : View(context) {
     }
 
     private fun drawHeader(c: Canvas, w: Float, h: Float) {
+        val top=RectF(w*.025f,h*.025f,w*.975f,h*.245f)
+        paint.color=Color.argb(112,5,27,35);c.drawRoundRect(top,26f,26f,paint)
+        paint.style=Paint.Style.STROKE;paint.strokeWidth=1.5f;paint.color=Color.argb(100,207,245,223);c.drawRoundRect(top,26f,26f,paint);paint.style=Paint.Style.FILL
         paint.textAlign=Paint.Align.CENTER
-        paint.typeface=Typeface.create("serif",Typeface.BOLD)
-        paint.color=Color.rgb(255,229,157);paint.textSize=w*.060f
-        c.drawText("JARDIM EM BLOCOS",w*.5f,h*.068f,paint)
+        paint.typeface=Typeface.create("sans-serif-rounded",Typeface.BLACK)
+        paint.color=Color.rgb(255,235,173);paint.textSize=w*.052f
+        c.drawText("JARDIM EM BLOCOS",w*.5f,h*.073f,paint)
         paint.typeface=Typeface.create("sans-serif",Typeface.BOLD)
-        paint.color=Color.rgb(183,229,194);paint.textSize=w*.021f
-        c.drawText(if(activeExpedition) "EXPEDIÇÃO  •  ETAPA "+(expeditionStage+1) else "CULTIVE • COMBINE • FLORESÇA",w*.5f,h*.101f,paint)
+        paint.color=Color.rgb(197,239,215);paint.textSize=w*.019f
+        c.drawText(if(activeExpedition)"EXPEDIÇÃO  •  ETAPA "+(expeditionStage+1) else "CULTIVE  •  COMBINE  •  FLORESÇA",w*.5f,h*.105f,paint)
 
         drawGardenShortcut(c,w,h)
         drawStat(c,w*.25f,h*.165f,"PONTOS",score.toString())
         drawStat(c,w*.69f,h*.165f,"RECORDE",max(best,score).toString())
-        paint.color=Color.rgb(255,226,160);paint.textSize=w*.024f
+        paint.color=Color.rgb(255,229,157);paint.textSize=w*.022f
         c.drawText("NÍVEL $level   •   ✦ $coins",w*.50f,h*.216f,paint)
-        if(activeExpedition){paint.color=Color.rgb(255,235,177);paint.textSize=w*.020f;c.drawText("META "+expeditionGoals[expeditionStage],w*.5f,h*.242f,paint)}
+        if(activeExpedition){paint.color=Color.rgb(255,235,177);paint.textSize=w*.019f;c.drawText("META "+expeditionGoals[expeditionStage],w*.5f,h*.241f,paint)}
         val lp=(score%500)/500f
-        val lb=RectF(w*.25f,h*.222f,w*.75f,h*.232f)
-        rounded(c,lb,6f,Color.argb(110,220,245,220))
+        val lb=RectF(w*.25f,h*.226f,w*.75f,h*.234f)
+        rounded(c,lb,6f,Color.argb(100,220,245,220))
         if(lp>0f)drawPremiumCard(c,RectF(lb.left,lb.top,lb.left+lb.width()*lp,lb.bottom),5f,Color.rgb(255,230,143),Color.rgb(232,161,63))
         val shopButton=RectF(w*.715f,h*.125f,w*.835f,h*.205f)
         drawPremiumCard(c,shopButton,17f,Color.rgb(255,220,133),Color.rgb(190,125,49))
-        paint.color=Color.rgb(55,62,38);paint.textSize=w*.030f;paint.typeface=Typeface.create("sans-serif-condensed",Typeface.BOLD)
-        c.drawText("LOJA",shopButton.centerX(),shopButton.centerY()+w*.011f,paint)
+        paint.color=Color.rgb(55,62,38);paint.textSize=w*.027f;paint.typeface=Typeface.create("sans-serif-rounded",Typeface.BLACK)
+        c.drawText("LOJA",shopButton.centerX(),shopButton.centerY()+w*.010f,paint)
         val button=RectF(w*.855f,h*.125f,w*.965f,h*.205f)
-        drawPremiumCard(c,button,17f,Color.rgb(39,92,70),Color.rgb(8,42,39))
-        paint.color=Color.WHITE;paint.textSize=w*.043f
+        drawPremiumCard(c,button,17f,Color.rgb(43,114,103),Color.rgb(8,48,55))
+        paint.color=Color.WHITE;paint.textSize=w*.041f
         c.drawText("Ⅱ",button.centerX(),button.centerY()+w*.014f,paint)
     }
 
     private fun drawGardenShortcut(c: Canvas, w: Float, h: Float) {
-        val button = RectF(w * .035f, h * .125f, w * .145f, h * .205f)
-        rounded(c, button, 18f, Color.argb(165, 5, 35, 29))
-        paint.color = Color.rgb(255, 232, 166)
-        paint.textAlign = Paint.Align.CENTER
-        paint.typeface = Typeface.create("sans-serif-rounded", Typeface.BOLD)
-        paint.textSize = w * .047f
-        c.drawText("✿", button.centerX(), button.centerY() + w * .016f, paint)
+        val button=RectF(w*.035f,h*.125f,w*.145f,h*.205f)
+        drawPremiumCard(c,button,17f,Color.rgb(64,158,110),Color.rgb(24,91,75))
+        paint.color=Color.WHITE;paint.textAlign=Paint.Align.CENTER
+        paint.typeface=Typeface.create("sans-serif-rounded",Typeface.BOLD);paint.textSize=w*.045f
+        c.drawText("✿",button.centerX(),button.centerY()+w*.015f,paint)
     }
 
     private fun drawGardenMiniature(c: Canvas, index: Int, stage: Int, rect: RectF) {
@@ -579,20 +584,21 @@ class GardenGameView(context: Context) : View(context) {
     }
 
     private fun drawBoard(c: Canvas) {
-        val outer=RectF(boardLeft-10f,boardTop-10f,boardLeft+boardSize+10f,boardTop+boardSize+10f)
-        paint.color=Color.argb(100,0,0,0);c.drawRoundRect(RectF(outer.left,outer.top+8f,outer.right,outer.bottom+8f),27f,27f,paint)
-        drawPremiumCard(c,outer,26f,Color.rgb(241,205,126),Color.rgb(143,91,43))
-        val inner=RectF(outer.left+5f,outer.top+5f,outer.right-5f,outer.bottom-5f)
-        rounded(c,inner,22f,Color.rgb(12,48,43))
+        val outer=RectF(boardLeft-11f,boardTop-11f,boardLeft+boardSize+11f,boardTop+boardSize+11f)
+        paint.color=Color.argb(125,0,0,0);c.drawRoundRect(RectF(outer.left,outer.top+9f,outer.right,outer.bottom+9f),28f,28f,paint)
+        drawPremiumCard(c,outer,27f,Color.rgb(67,142,130),Color.rgb(19,64,72))
+        val inner=RectF(outer.left+6f,outer.top+6f,outer.right-6f,outer.bottom-6f)
+        paint.shader=LinearGradient(inner.left,inner.top,inner.right,inner.bottom,Color.rgb(12,39,52),Color.rgb(8,54,58),Shader.TileMode.CLAMP)
+        c.drawRoundRect(inner,22f,22f,paint);paint.shader=null
         for(r in 0..8)for(col in 0..8){
             val left=boardLeft+col*cell;val top=boardTop+r*cell
             val rect=RectF(left+2.2f,top+2.2f,left+cell-2.2f,top+cell-2.2f)
             if(board[r][col]){
                 drawBlock(c,rect,colors[r][col],cell*.15f)
             }else{
-                rounded(c,rect,cell*.14f,Color.argb(105,142,194,160))
-                paint.color=Color.argb(30,235,255,235)
-                c.drawRoundRect(RectF(rect.left+cell*.10f,rect.top+cell*.08f,rect.right-cell*.10f,rect.top+cell*.13f),cell*.05f,cell*.05f,paint)
+                paint.color=Color.argb(92,108,173,165);c.drawRoundRect(rect,cell*.14f,cell*.14f,paint)
+                paint.color=Color.argb(38,222,255,247)
+                c.drawRoundRect(RectF(rect.left+cell*.12f,rect.top+cell*.09f,rect.right-cell*.12f,rect.top+cell*.15f),cell*.05f,cell*.05f,paint)
             }
         }
         if(dragging&&previewRow>=0&&previewCol>=0){
@@ -601,29 +607,33 @@ class GardenGameView(context: Context) : View(context) {
                 val row=previewRow+dy;val col=previewCol+dx
                 if(row in 0..8&&col in 0..8){
                     val rect=RectF(boardLeft+col*cell+2f,boardTop+row*cell+2f,boardLeft+(col+1)*cell-2f,boardTop+(row+1)*cell-2f)
-                    drawBlock(c,rect,if(previewValid)p.color else Color.rgb(235,75,75),cell*.15f,if(previewValid)155 else 175)
+                    drawBlock(c,rect,if(previewValid)p.color else Color.rgb(235,75,75),cell*.15f,if(previewValid)165 else 180)
                 }
             }
         }
     }
 
     private fun drawBlock(c: Canvas, rect: RectF, base: Int, radius: Float, alpha: Int = 255) {
-        val d=min(rect.width(),rect.height())*.17f
-        // Sombra projetada e faces laterais: cada peça é um pequeno cubo.
-        paint.color=Color.argb(alpha/2,5,24,22)
-        c.drawRoundRect(RectF(rect.left+d*.35f,rect.top+d*1.45f,rect.right+d*.7f,rect.bottom+d*1.45f),radius,radius,paint)
-        val right=android.graphics.Path().apply{moveTo(rect.right-d,rect.top+d*.48f);lineTo(rect.right,rect.top);lineTo(rect.right,rect.bottom-d*.55f);lineTo(rect.right-d,rect.bottom);close()}
-        paint.color=withAlpha(Color.rgb(max(0,Color.red(base)-65),max(0,Color.green(base)-65),max(0,Color.blue(base)-65)),alpha);c.drawPath(right,paint)
-        val bottom=android.graphics.Path().apply{moveTo(rect.left+d,rect.bottom-d*.55f);lineTo(rect.right,rect.bottom-d*.55f);lineTo(rect.right-d,rect.bottom);lineTo(rect.left,rect.bottom);close()}
-        paint.color=withAlpha(Color.rgb(max(0,Color.red(base)-85),max(0,Color.green(base)-85),max(0,Color.blue(base)-85)),alpha);c.drawPath(bottom,paint)
+        val d=min(rect.width(),rect.height())*.19f
+        paint.color=Color.argb(alpha/3,0,10,22)
+        c.drawRoundRect(RectF(rect.left+d*.25f,rect.top+d*1.42f,rect.right+d*.78f,rect.bottom+d*1.42f),radius,radius,paint)
+        val shade=Color.rgb(max(0,Color.red(base)-74),max(0,Color.green(base)-74),max(0,Color.blue(base)-74))
+        val side=android.graphics.Path().apply{moveTo(rect.right-d,rect.top+d*.48f);lineTo(rect.right,rect.top);lineTo(rect.right,rect.bottom-d*.50f);lineTo(rect.right-d,rect.bottom);close()}
+        paint.color=withAlpha(shade,alpha);c.drawPath(side,paint)
+        val bottom=android.graphics.Path().apply{moveTo(rect.left+d,rect.bottom-d*.50f);lineTo(rect.right,rect.bottom-d*.50f);lineTo(rect.right-d,rect.bottom);lineTo(rect.left,rect.bottom);close()}
+        paint.color=withAlpha(Color.rgb(max(0,Color.red(base)-96),max(0,Color.green(base)-96),max(0,Color.blue(base)-96)),alpha);c.drawPath(bottom,paint)
         val top=android.graphics.Path().apply{moveTo(rect.left+d,rect.top);lineTo(rect.right,rect.top);lineTo(rect.right-d,rect.top+d);lineTo(rect.left,rect.top+d);close()}
-        paint.shader=LinearGradient(rect.left,rect.top,rect.right,rect.top,withAlpha(Color.rgb(min(255,Color.red(base)+55),min(255,Color.green(base)+55),min(255,Color.blue(base)+55)),alpha),withAlpha(base,alpha),Shader.TileMode.CLAMP)
+        paint.shader=LinearGradient(rect.left,rect.top,rect.right,rect.top,
+            withAlpha(Color.rgb(min(255,Color.red(base)+75),min(255,Color.green(base)+75),min(255,Color.blue(base)+75)),alpha),
+            withAlpha(Color.rgb(min(255,Color.red(base)+18),min(255,Color.green(base)+18),min(255,Color.blue(base)+18)),alpha),Shader.TileMode.CLAMP)
         c.drawPath(top,paint);paint.shader=null
-        paint.color=withAlpha(Color.argb(90,255,255,255),alpha)
-        c.drawLine(rect.left+d,rect.top+1f,rect.right-2f,rect.top+1f,paint)
-        c.drawLine(rect.left+d*.45f,rect.top+d*.45f,rect.left+d,rect.top+1f,paint)
-        paint.color=withAlpha(Color.argb(65,255,255,255),alpha)
-        c.drawCircle(rect.left+d*1.25f,rect.top+d*.48f,d*.12f,paint)
+        val face=RectF(rect.left+d*.72f,rect.top+d*.92f,rect.right-d*.22f,rect.bottom-d*.20f)
+        paint.shader=LinearGradient(face.left,face.top,face.right,face.bottom,withAlpha(base,alpha),withAlpha(shade,alpha),Shader.TileMode.CLAMP)
+        c.drawRoundRect(face,radius*.75f,radius*.75f,paint);paint.shader=null
+        paint.color=withAlpha(Color.argb(145,255,255,255),alpha)
+        c.drawRoundRect(RectF(face.left+face.width()*.12f,face.top+face.height()*.08f,face.right-face.width()*.16f,face.top+face.height()*.15f),radius,radius,paint)
+        paint.color=withAlpha(Color.argb(80,255,255,255),alpha)
+        c.drawCircle(face.left+face.width()*.18f,face.top+face.height()*.22f,d*.13f,paint)
     }
 
     private fun drawPiece(c: Canvas, piece: Piece, cx: Float, cy: Float, size: Float) {
@@ -636,35 +646,31 @@ class GardenGameView(context: Context) : View(context) {
     }
 
     private fun drawPieceTray(c: Canvas, w: Float, h: Float) {
-        paint.textAlign=Paint.Align.CENTER;paint.typeface=Typeface.create("sans-serif-condensed",Typeface.BOLD)
-        paint.color=Color.rgb(255,231,170);paint.textSize=w*.030f
+        paint.textAlign=Paint.Align.CENTER;paint.typeface=Typeface.create("sans-serif-rounded",Typeface.BOLD)
+        paint.color=Color.rgb(225,248,232);paint.textSize=w*.026f
         c.drawText("ESCOLHA SUA PRÓXIMA JOGADA",w*.5f,slotsTop-h*.020f,paint)
         val slotWidth=w*.275f
         for(i in 0..2){
             val centerX=w*(.18f+i*.32f);val active=i==selected&&pieces[i]!=null
             val rect=RectF(centerX-slotWidth/2f,trayCenterY-h*.047f,centerX+slotWidth/2f,trayCenterY+h*.047f)
-            if(pieces[i]==null)drawPremiumCard(c,rect,19f,Color.argb(80,13,42,37),Color.argb(65,7,30,29))
-            else if(active)drawPremiumCard(c,rect,19f,Color.rgb(255,231,164),Color.rgb(211,153,75))
-            else drawPremiumCard(c,rect,19f,Color.rgb(38,104,78),Color.rgb(9,52,46))
-            if(active){paint.style=Paint.Style.STROKE;paint.strokeWidth=3f;paint.color=Color.rgb(255,245,194);c.drawRoundRect(rect,19f,19f,paint);paint.style=Paint.Style.FILL}
+            if(pieces[i]==null)drawPremiumCard(c,rect,19f,Color.argb(85,22,61,70),Color.argb(75,8,34,45))
+            else if(active)drawPremiumCard(c,rect,19f,Color.rgb(255,230,151),Color.rgb(207,139,54))
+            else drawPremiumCard(c,rect,19f,Color.rgb(38,116,103),Color.rgb(10,58,65))
+            if(active){paint.style=Paint.Style.STROKE;paint.strokeWidth=2.5f;paint.color=Color.rgb(255,247,205);c.drawRoundRect(rect,19f,19f,paint);paint.style=Paint.Style.FILL}
             val piece=pieces[i]
             if(piece!=null&&!(dragging&&i==selected))drawPiece(c,piece,centerX,trayCenterY-h*.004f,min(cell*.37f,h*.025f))
-            else if(piece==null){paint.color=Color.argb(150,235,247,232);paint.textSize=w*.045f;c.drawText("✓",centerX,trayCenterY+h*.012f,paint)}
+            else if(piece==null){paint.color=Color.argb(180,235,247,232);paint.textSize=w*.045f;c.drawText("✓",centerX,trayCenterY+h*.012f,paint)}
         }
-        if(comboAlpha>0f){paint.color=withAlpha(Color.rgb(255,225,137),(comboAlpha*255).toInt());paint.textSize=w*.043f;paint.typeface=Typeface.create("sans-serif-condensed",Typeface.BOLD);c.drawText(comboLabel,w*.5f,trayCenterY+h*.105f,paint)}
+        if(comboAlpha>0f){paint.color=withAlpha(Color.rgb(255,225,137),(comboAlpha*255).toInt());paint.textSize=w*.040f;paint.typeface=Typeface.create("sans-serif-rounded",Typeface.BLACK);c.drawText(comboLabel,w*.5f,trayCenterY+h*.105f,paint)}
     }
 
     private fun drawFooter(c: Canvas, w: Float, h: Float) {
-        paint.color = if (activePower.isNotEmpty()) Color.rgb(255, 226, 160) else Color.rgb(218, 241, 220)
-        paint.textAlign = Paint.Align.CENTER
-        paint.typeface = Typeface.create("sans-serif-rounded", Typeface.BOLD)
-        paint.textSize = w * .025f
-        val hint = when (activePower) {
-            "hammer" -> "MARTELO ATIVO • TOQUE EM UM BLOCO"
-            "row" -> "BOMBA DE LINHA ATIVA • TOQUE NA LINHA"
-            else -> "Arraste uma peça para o tabuleiro"
-        }
-        c.drawText(hint, w / 2f, h * .955f, paint)
+        val hint=when(activePower){"hammer"->"MARTELO ATIVO  •  TOQUE EM UM BLOCO";"row"->"BOMBA DE LINHA ATIVA  •  TOQUE NA LINHA";else->"ARRASTE UMA PEÇA PARA O TABULEIRO"}
+        val panel=RectF(w*.10f,h*.925f,w*.90f,h*.975f)
+        paint.color=Color.argb(120,4,31,38);c.drawRoundRect(panel,18f,18f,paint)
+        paint.color=if(activePower.isNotEmpty())Color.rgb(255,226,160)else Color.rgb(221,244,230)
+        paint.textAlign=Paint.Align.CENTER;paint.typeface=Typeface.create("sans-serif-rounded",Typeface.BOLD);paint.textSize=w*.022f
+        c.drawText(hint,w*.5f,h*.956f,paint)
     }
 
     private fun drawShopScreen(c: Canvas, w: Float, h: Float) {
@@ -796,12 +802,13 @@ class GardenGameView(context: Context) : View(context) {
     }
 
     private fun drawDim(c: Canvas, w: Float, h: Float) {
-        paint.shader=LinearGradient(0f,0f,0f,h,intArrayOf(Color.argb(225,3,20,23),Color.argb(195,5,36,31)),null,Shader.TileMode.CLAMP)
+        paint.shader=LinearGradient(0f,0f,w,h,intArrayOf(Color.argb(205,3,17,29),Color.argb(190,5,35,38)),null,Shader.TileMode.CLAMP)
         c.drawRect(0f,0f,w,h,paint);paint.shader=null
     }
 
     private fun drawPanel(c: Canvas, w: Float, top: Float, bottom: Float) {
-        drawPremiumCard(c,RectF(w*.055f,top,w*.945f,bottom),30f,Color.rgb(248,241,211),Color.rgb(211,220,184))
+        val rect=RectF(w*.055f,top,w*.945f,bottom)
+        drawPremiumCard(c,rect,30f,Color.rgb(33,91,88),Color.rgb(10,43,56))
     }
 
     private fun drawTutorial(c: Canvas, w: Float, h: Float) {
@@ -887,16 +894,20 @@ class GardenGameView(context: Context) : View(context) {
 
     private fun drawPremiumCard(c: Canvas, rect: RectF, radius: Float, topColor: Int, bottomColor: Int) {
         paint.shader=null;paint.style=Paint.Style.FILL
-        paint.color=Color.argb(85,0,0,0)
-        c.drawRoundRect(RectF(rect.left+2f,rect.top+5f,rect.right+2f,rect.bottom+5f),radius,radius,paint)
+        paint.color=Color.argb(105,0,9,18)
+        c.drawRoundRect(RectF(rect.left+1f,rect.top+6f,rect.right+2f,rect.bottom+8f),radius,radius,paint)
         paint.shader=LinearGradient(rect.left,rect.top,rect.right,rect.bottom,topColor,bottomColor,Shader.TileMode.CLAMP)
         c.drawRoundRect(rect,radius,radius,paint);paint.shader=null
-        paint.style=Paint.Style.STROKE;paint.strokeWidth=max(1.5f,width*.0025f)
-        paint.color=Color.argb(115,255,244,194)
+        paint.style=Paint.Style.STROKE;paint.strokeWidth=max(1.4f,width*.0022f)
+        paint.color=Color.argb(155,232,250,229)
         c.drawRoundRect(RectF(rect.left+1f,rect.top+1f,rect.right-1f,rect.bottom-1f),radius,radius,paint)
         paint.style=Paint.Style.FILL
-        paint.color=Color.argb(38,255,255,255)
-        c.drawRoundRect(RectF(rect.left+radius*.55f,rect.top+radius*.22f,rect.right-radius*.55f,rect.top+radius*.22f+max(2f,rect.height()*.025f)),radius,radius,paint)
+        paint.shader=LinearGradient(rect.left,rect.top,rect.left,rect.top+rect.height()*.48f,
+            Color.argb(65,255,255,255),Color.TRANSPARENT,Shader.TileMode.CLAMP)
+        c.drawRoundRect(RectF(rect.left+3f,rect.top+2f,rect.right-3f,rect.top+rect.height()*.50f),radius,radius,paint)
+        paint.shader=null
+        paint.color=Color.argb(32,255,255,255)
+        c.drawRoundRect(RectF(rect.left+radius*.55f,rect.top+radius*.18f,rect.right-radius*.55f,rect.top+radius*.18f+max(2f,rect.height()*.018f)),radius,radius,paint)
     }
 
     private fun rounded(c: Canvas, rect: RectF, radius: Float, color: Int) {
