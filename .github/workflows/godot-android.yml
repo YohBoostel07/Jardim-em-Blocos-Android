@@ -40,7 +40,13 @@ jobs:
           curl -L --fail -o "$HOME/godot/godot.zip" "https://github.com/godotengine/godot/releases/download/4.4.1-stable/Godot_v4.4.1-stable_linux.x86_64.zip"
           unzip -o "$HOME/godot/godot.zip" -d "$HOME/godot"
           curl -L --fail -o "$HOME/godot/templates.tpz" "https://github.com/godotengine/godot/releases/download/4.4.1-stable/Godot_v4.4.1-stable_export_templates.tpz"
-          unzip -o "$HOME/godot/templates.tpz" -d "$HOME/.local/share/godot/export_templates/4.4.1.stable"
+          mkdir -p "$HOME/godot/template-unpack"
+          unzip -o "$HOME/godot/templates.tpz" -d "$HOME/godot/template-unpack"
+          if [ -d "$HOME/godot/template-unpack/templates" ]; then
+            cp -a "$HOME/godot/template-unpack/templates/." "$HOME/.local/share/godot/export_templates/4.4.1.stable/"
+          else
+            cp -a "$HOME/godot/template-unpack/." "$HOME/.local/share/godot/export_templates/4.4.1.stable/"
+          fi
           chmod +x "$HOME/godot/Godot_v4.4.1-stable_linux.x86_64"
 
       - name: Configure Godot Android SDK paths
