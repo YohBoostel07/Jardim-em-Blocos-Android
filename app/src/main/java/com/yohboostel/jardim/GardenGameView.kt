@@ -66,6 +66,8 @@ class GardenGameView(context: Context) : View(context) {
     private var totalLines = prefs.getInt("total_lines", 0)
     private var bestCombo = prefs.getInt("best_combo", 0)
     private var showGardens = false
+    private var gardenDetailOpen = false
+    private var selectedGarden = 0
     private var coins = prefs.getInt("garden_coins", 100)
     private val gardenNames = listOf("Jardim das Flores", "Bosque Encantado", "Lago Sereno")
     private val gardenDescriptions = listOf("Recupere o canteiro e traga as cores de volta.", "Desperte a vida entre as árvores.", "Limpe as águas e floresça as margens.")
@@ -132,7 +134,9 @@ class GardenGameView(context: Context) : View(context) {
         drawPieceTray(canvas, w, h)
         drawFooter(canvas, w, h)
         if (sparks.isNotEmpty()) drawSparks(canvas)
-        if (showGardens) drawGardensScreen(canvas, w, h)
+        if (showGardens) {
+            if (gardenDetailOpen) drawGardenDetailScreen(canvas, w, h) else drawGardensScreen(canvas, w, h)
+        }
         if (showTutorial) drawTutorial(canvas, w, h)
         else if (confirmRestart) drawRestartConfirmation(canvas, w, h)
         else if (paused) drawPauseMenu(canvas, w, h)
@@ -245,6 +249,46 @@ class GardenGameView(context: Context) : View(context) {
         paint.strokeWidth = 1f
     }
 
+    private fun drawGardenDetailScreen(c: Canvas, w: Float, h: Float) {
+        drawDim(c, w, h)
+        rounded(c, RectF(w * .045f, h * .055f, w * .955f, h * .945f), 28f, Color.rgb(239, 231, 197))
+        val index = selectedGarden.coerceIn(0, 2)
+        val stage = gardenStages[index]
+        val unlocked = index == 0 || gardenStages[index - 1] >= 3
+        paint.textAlign = Paint.Align.CENTER
+        paint.typeface = Typeface.create("sans-serif-rounded", Typeface.BOLD)
+        paint.color = Color.rgb(47, 91, 64)
+        paint.textSize = w * .052f
+        c.drawText(gardenNames[index], w / 2f, h * .125f, paint)
+        paint.textSize = w * .027f
+        paint.color = Color.rgb(174, 116, 43)
+        c.drawText("MOEDAS " + coins, w / 2f, h * .17f, paint)
+        val scene = RectF(w * .10f, h * .205f, w * .90f, h * .57f)
+        drawGardenMiniature(c, index, stage, scene)
+        paint.textSize = w * .034f
+        paint.color = Color.rgb(47, 91, 64)
+        c.drawText("ETAPA " + stage + " DE 3", w / 2f, h * .625f, paint)
+        paint.typeface = Typeface.create("sans-serif", Typeface.NORMAL)
+        paint.textSize = w * .027f
+        paint.color = Color.rgb(103, 111, 87)
+        c.drawText(gardenDescriptions[index], w / 2f, h * .67f, paint)
+        val progress = RectF(w * .18f, h * .705f, w * .82f, h * .725f)
+        rounded(c, progress, 10f, Color.rgb(218, 220, 195))
+        if (stage > 0) rounded(c, RectF(progress.left, progress.top, progress.left + progress.width() * stage / 3f, progress.bottom), 10f, Color.rgb(91, 161, 99))
+        val action = RectF(w * .18f, h * .755f, w * .82f, h * .835f)
+        val canRestore = unlocked && stage < 3 && coins >= gardenCosts[index][stage]
+        val label = when { !unlocked -> "JARDIM BLOQUEADO"; stage >= 3 -> "JARDIM RESTAURADO!"; else -> "RESTAURAR  •  " + gardenCosts[index][stage] + " MOEDAS" }
+        rounded(c, action, 18f, if (canRestore) Color.rgb(71, 145, 91) else Color.rgb(178, 190, 165))
+        paint.color = if (canRestore) Color.WHITE else Color.rgb(76, 91, 66)
+        paint.textSize = w * .028f
+        paint.typeface = Typeface.create("sans-serif", Typeface.BOLD)
+        c.drawText(label, action.centerX(), action.centerY() + w * .01f, paint)
+        val back = RectF(w * .25f, h * .865f, w * .75f, h * .92f)
+        rounded(c, back, 15f, Color.rgb(71, 145, 91))
+        paint.color = Color.WHITE
+        paint.textSize = w * .029f
+        c.drawText("VOLTAR AOS JARDINS", back.centerX(), back.centerY() + w * .01f, paint)
+    }
     private fun drawGardensScreen(c: Canvas, w: Float, h: Float) {
         drawDim(c, w, h)
         rounded(c, RectF(w * .045f, h * .075f, w * .955f, h * .94f), 28f, Color.rgb(239, 231, 197))
@@ -751,18 +795,27 @@ class GardenGameView(context: Context) : View(context) {
                     return true
                 }
                 if (showGardens) {
-                    when {
-                        event.y in height * .875f..height * .94f -> showGardens = false
-                        event.y in height * .755f..height * .865f &&
-                            event.x > width * .62f && dailyLines >= 5 && !dailyRewardClaimed -> {
-                            dailyRewardClaimed = true
-                            coins += 100
-                            saveGardenProgress()
-                            playTone(ToneGenerator.TONE_PROP_ACK, 150)
+                    if (gardenDetailOpen) {
+                        when {
+                            event.y in height * .85f..height * .94f -> gardenDetailOpen = false
+                            event.y in height * .74f..height * .85f -> {
+                                val index = selectedGarden
+                                if ((index == 0 || gardenStages[index - 1] >= 3) && gardenStages[index] < 3) restoreGarden(index)
+                            }
                         }
-                        event.y in height * .225f..height * .38f -> restoreGarden(0)
-                        event.y in height * .399f..height * .554f -> restoreGarden(1)
-                        event.y in height * .573f..height * .728f -> restoreGarden(2)
+                    } else {
+                        when {
+                            event.y in height * .875f..height * .94f -> showGardens = false
+                            event.y in height * .755f..height * .865f && event.x > width * .62f && dailyLines >= 5 && !dailyRewardClaimed -> {
+                                dailyRewardClaimed = true
+                                coins += 100
+                                saveGardenProgress()
+                                playTone(ToneGenerator.TONE_PROP_ACK, 150)
+                            }
+                            event.y in height * .225f..height * .38f -> { selectedGarden = 0; if (event.x < width * .58f) gardenDetailOpen = true else restoreGarden(0) }
+                            event.y in height * .399f..height * .554f -> { selectedGarden = 1; if (event.x < width * .58f) gardenDetailOpen = true else restoreGarden(1) }
+                            event.y in height * .573f..height * .728f -> { selectedGarden = 2; if (event.x < width * .58f) gardenDetailOpen = true else restoreGarden(2) }
+                        }
                     }
                     invalidate()
                     return true
