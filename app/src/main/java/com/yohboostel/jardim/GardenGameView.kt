@@ -401,7 +401,7 @@ class GardenGameView(context: Context) : View(context) {
             c.drawCircle(cx+w*.157f,cy-h*.050f,w*.036f,paint)
             paint.color = Color.WHITE
             paint.textSize = w*.034f
-            c.drawText(if(!unlocked)"🔒" else if(stage>=3)"★" else (stage+1).toString(),cx+w*.157f,cy-h*.038f,paint)
+            c.drawText(if(!unlocked)"×" else if(stage>=3)"★" else (stage+1).toString(),cx+w*.157f,cy-h*.038f,paint)
 
             if (!unlocked) {
                 paint.color = Color.argb(135,35,47,38)
@@ -409,10 +409,6 @@ class GardenGameView(context: Context) : View(context) {
                 paint.color = Color.WHITE
                 paint.textSize = w*.025f
                 c.drawText("CONCLUA A REGIÃO ANTERIOR",cx,cy+h*.012f,paint)
-            } else {
-                paint.color = Color.rgb(255,250,226)
-                paint.textSize = w*.020f
-                c.drawText(if(stage>=3)"REGIÃO RESTAURADA" else "TOQUE PARA EXPLORAR",cx,cy+h*.095f,paint)
             }
         }
 
