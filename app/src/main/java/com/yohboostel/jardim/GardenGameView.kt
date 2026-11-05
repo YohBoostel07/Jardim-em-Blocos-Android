@@ -396,40 +396,83 @@ class GardenGameView(context: Context) : View(context) {
         c.drawText("✿", button.centerX(), button.centerY() + w * .016f, paint)
     }
 
-    private fun drawGardenMiniature(c: Canvas,index:Int,stage:Int,rect:RectF) { /* Miniaturas substituídas pelo cenário 3D real. */ }
+    private fun drawGardenMiniature(c: Canvas, index: Int, stage: Int, rect: RectF) {
+        val save=c.save()
+        c.clipRoundRect(rect,22f,22f)
+        val sky=when(index){0->intArrayOf(Color.rgb(116,196,235),Color.rgb(224,241,208));1->intArrayOf(Color.rgb(82,150,188),Color.rgb(199,224,177));else->intArrayOf(Color.rgb(99,185,224),Color.rgb(218,239,222))}
+        paint.shader=LinearGradient(rect.left,rect.top,rect.left,rect.bottom,sky[0],sky[1],Shader.TileMode.CLAMP)
+        c.drawRect(rect,paint);paint.shader=null
+        drawSphere3D(c,rect.right-rect.width()*.16f,rect.top+rect.height()*.20f,rect.width()*.075f,rect.height()*.13f,Color.rgb(255,221,116))
+        val hill=android.graphics.Path().apply{moveTo(rect.left,rect.top+rect.height()*.62f);cubicTo(rect.left+rect.width()*.24f,rect.top+rect.height()*.30f,rect.left+rect.width()*.48f,rect.top+rect.height()*.72f,rect.right,rect.top+rect.height()*.40f);lineTo(rect.right,rect.bottom);lineTo(rect.left,rect.bottom);close()}
+        paint.shader=LinearGradient(rect.top,rect.top+rect.height()*.45f,rect.top,rect.bottom,Color.rgb(119,183,104),Color.rgb(43,119,67),Shader.TileMode.CLAMP)
+        c.drawPath(hill,paint);paint.shader=null
+        val ground=rect.bottom-rect.height()*.13f
+        if(index==2){
+            paint.color=Color.rgb(76,154,183);c.drawOval(rect.left+rect.width()*.38f,rect.top+rect.height()*.53f,rect.right+rect.width()*.08f,rect.bottom+rect.height()*.10f,paint)
+            paint.color=Color.argb(150,214,247,244);c.drawLine(rect.left+rect.width()*.48f,rect.top+rect.height()*.70f,rect.right-rect.width()*.10f,rect.top+rect.height()*.68f,paint)
+            drawRock3D(c,rect.left+rect.width()*.42f,ground,rect.width()*.07f,rect.height()*.09f)
+            drawRock3D(c,rect.right-rect.width()*.12f,ground-rect.height()*.02f,rect.width()*.06f,rect.height()*.08f)
+        }else{
+            paint.color=Color.rgb(190,142,83)
+            val path=android.graphics.Path().apply{moveTo(rect.left+rect.width()*.38f,rect.bottom);cubicTo(rect.left+rect.width()*.55f,rect.top+rect.height()*.77f,rect.left+rect.width()*.28f,rect.top+rect.height()*.63f,rect.left+rect.width()*.53f,rect.top+rect.height()*.53f);cubicTo(rect.left+rect.width()*.70f,rect.top+rect.height()*.46f,rect.left+rect.width()*.78f,rect.top+rect.height()*.55f,rect.right,rect.top+rect.height()*.48f);lineTo(rect.right,rect.bottom);close()}
+            c.drawPath(path,paint)
+        }
+        val leaf=when(index){0->Color.rgb(52,159,76);1->Color.rgb(30,119,68);else->Color.rgb(42,142,78)}
+        drawTree3D(c,rect.left+rect.width()*.18f,ground,rect.height()*.24f,leaf,1.05f)
+        drawTree3D(c,rect.left+rect.width()*.78f,ground,rect.height()*.21f,if(index==1)Color.rgb(21,102,61)else leaf,.95f)
+        if(index==1){
+            drawTree3D(c,rect.left+rect.width()*.48f,ground-rect.height()*.08f,rect.height()*.28f,Color.rgb(34,125,65),1.12f)
+            drawBush3D(c,rect.left+rect.width()*.32f,ground,rect.height()*.12f)
+            drawBush3D(c,rect.left+rect.width()*.65f,ground,rect.height()*.10f)
+        }else{
+            for(i in 0..6){
+                val fx=rect.left+rect.width()*(.30f+i*.085f)
+                drawFlower3D(c,fx,ground-rect.height()*(if(i%2==0).03f else .01f),rect.height()*.075f,
+                    when(i%4){0->Color.rgb(245,87,135);1->Color.rgb(255,205,65);2->Color.rgb(153,112,222);else->Color.WHITE})
+            }
+            if(index==2){drawBush3D(c,rect.left+rect.width()*.30f,ground,rect.height()*.12f);drawBush3D(c,rect.right-rect.width()*.22f,ground,rect.height()*.12f)}
+        }
+        for(i in 0 until stage.coerceIn(0,3)){
+            drawSphere3D(c,rect.left+rect.width()*(.12f+i*.10f),rect.top+rect.height()*.86f,rect.width()*.025f,rect.height()*.045f,Color.rgb(255,221,126))
+        }
+        paint.color=Color.argb(90,255,255,255);c.drawLine(rect.left,rect.top+2f,rect.right,rect.top+2f,paint)
+        c.restoreToCount(save)
+        paint.shader=null;paint.style=Paint.Style.FILL
+    }
 
     private fun drawGardenDetailScreen(c: Canvas, w: Float, h: Float) {
         val index=selectedGarden.coerceIn(0,2);val stage=gardenStages[index]
         val unlocked=index==0||gardenStages[index-1]>=3
         paint.textAlign=Paint.Align.CENTER
-        drawPremiumCard(c,RectF(w*.07f,h*.045f,w*.93f,h*.19f),25f,Color.argb(225,10,43,39),Color.argb(220,5,28,31))
+        drawPremiumCard(c,RectF(w*.07f,h*.035f,w*.93f,h*.19f),25f,Color.argb(225,10,43,39),Color.argb(220,5,28,31))
         paint.typeface=Typeface.create("sans-serif-rounded",Typeface.BOLD)
         paint.color=Color.WHITE;paint.textSize=w*.055f
         c.drawText(gardenNames[index],w*.5f,h*.115f,paint)
         paint.textSize=w*.025f;paint.color=Color.rgb(255,226,150)
         c.drawText("✦  $coins MOEDAS",w*.5f,h*.16f,paint)
-        drawPremiumCard(c,RectF(w*.12f,h*.30f,w*.88f,h*.47f),22f,Color.argb(145,10,43,39),Color.argb(125,5,28,31))
+        val scene=RectF(w*.09f,h*.215f,w*.91f,h*.625f)
+        drawPremiumCard(c,scene,24f,Color.rgb(35,104,68),Color.rgb(10,48,39))
+        drawGardenMiniature(c,index,stage,RectF(scene.left+5f,scene.top+5f,scene.right-5f,scene.bottom-5f))
         paint.color=Color.WHITE;paint.textSize=w*.034f
-        c.drawText("JARDIM 3D • ETAPA $stage DE 3",w*.5f,h*.39f,paint)
+        c.drawText("ETAPA $stage DE 3",w*.5f,h*.665f,paint)
         paint.textSize=w*.023f;paint.color=Color.rgb(220,240,215)
-        c.drawText(gardenDescriptions[index],w*.5f,h*.435f,paint)
-        val progress=RectF(w*.18f,h*.705f,w*.82f,h*.725f)
+        c.drawText(gardenDescriptions[index],w*.5f,h*.695f,paint)
+        val progress=RectF(w*.18f,h*.735f,w*.82f,h*.755f)
         rounded(c,progress,10f,Color.argb(170,190,204,169))
         if(stage>0)drawPremiumCard(c,RectF(progress.left,progress.top,progress.left+progress.width()*stage/3f,progress.bottom),9f,Color.rgb(129,191,107),Color.rgb(59,139,76))
-        val action=RectF(w*.18f,h*.755f,w*.82f,h*.835f)
+        val action=RectF(w*.12f,h*.785f,w*.88f,h*.865f)
         val canRestore=unlocked&&stage<3&&coins>=gardenCosts[index][stage]
         val label=when{!unlocked->"JARDIM BLOQUEADO";stage>=3->"JARDIM RESTAURADO!";else->"RESTAURAR  •  "+gardenCosts[index][stage]+" MOEDAS"}
         drawPremiumCard(c,action,19f,if(canRestore)Color.rgb(105,177,103)else Color.rgb(184,195,165),if(canRestore)Color.rgb(44,121,71)else Color.rgb(140,157,130))
         paint.color=Color.WHITE;paint.textSize=w*.028f;paint.typeface=Typeface.create("sans-serif",Typeface.BOLD)
         c.drawText(label,action.centerX(),action.centerY()+w*.01f,paint)
-        val back=RectF(w*.25f,h*.84f,w*.75f,h*.91f)
+        val back=RectF(w*.25f,h*.89f,w*.75f,h*.955f)
         drawPremiumCard(c,back,15f,Color.rgb(72,151,94),Color.rgb(34,103,67))
         paint.color=Color.WHITE;paint.textSize=w*.029f
         c.drawText("VOLTAR AOS JARDINS",back.centerX(),back.centerY()+w*.01f,paint)
     }
 
     private fun drawGardensScreen(c: Canvas, w: Float, h: Float) {
-        // Interface leve sobre as ilhas 3D renderizadas em OpenGL.
         paint.textAlign=Paint.Align.CENTER
         drawPremiumCard(c,RectF(w*.055f,h*.035f,w*.945f,h*.155f),25f,Color.argb(225,17,55,48),Color.argb(220,8,35,35))
         paint.typeface=Typeface.create("sans-serif-rounded",Typeface.BOLD)
@@ -440,25 +483,27 @@ class GardenGameView(context: Context) : View(context) {
         drawPremiumCard(c,RectF(w*.66f,h*.165f,w*.94f,h*.211f),14f,Color.rgb(255,229,151),Color.rgb(196,133,48))
         paint.color=Color.rgb(58,66,39);paint.textSize=w*.026f
         c.drawText("✦  "+coins+" moedas",w*.80f,h*.196f,paint)
-        val centersY=floatArrayOf(.295f,.49f,.695f)
+        val centersY=floatArrayOf(.295f,.49f,.685f)
         for(i in 0..2){
             val cy=h*centersY[i]
             val unlocked=i==0||gardenStages[i-1]>=3
             val stage=gardenStages[i]
-            val panel=RectF(w*.10f,cy-h*.065f,w*.90f,cy+h*.065f)
-            drawPremiumCard(c,panel,20f,Color.argb(218,10,43,39),Color.argb(220,5,28,31))
+            val panel=RectF(w*.07f,cy-h*.075f,w*.93f,cy+h*.075f)
+            drawPremiumCard(c,panel,20f,Color.argb(225,10,43,39),Color.argb(225,5,28,31))
+            val thumb=RectF(panel.left+6f,panel.top+6f,panel.left+w*.31f,panel.bottom-6f)
+            drawGardenMiniature(c,i,stage,thumb)
             paint.textAlign=Paint.Align.LEFT
             paint.typeface=Typeface.create("sans-serif-rounded",Typeface.BOLD)
-            paint.color=Color.WHITE;paint.textSize=w*.040f
-            c.drawText(gardenNames[i],w*.16f,cy-h*.006f,paint)
+            paint.color=Color.WHITE;paint.textSize=w*.036f
+            c.drawText(gardenNames[i],w*.40f,cy-h*.012f,paint)
             paint.typeface=Typeface.create("sans-serif",Typeface.NORMAL)
-            paint.color=Color.rgb(211,235,202);paint.textSize=w*.025f
-            c.drawText(if(!unlocked)"Conclua a região anterior" else "Restauração: $stage de 3",w*.16f,cy+h*.035f,paint)
+            paint.color=Color.rgb(211,235,202);paint.textSize=w*.024f
+            c.drawText(if(!unlocked)"Conclua a região anterior" else "Restauração: $stage de 3",w*.40f,cy+h*.028f,paint)
             paint.textAlign=Paint.Align.RIGHT
             paint.typeface=Typeface.create("sans-serif",Typeface.BOLD)
             paint.color=if(!unlocked)Color.LTGRAY else if(stage>=3)Color.rgb(255,218,112)else Color.rgb(171,235,157)
-            paint.textSize=w*.027f
-            c.drawText(if(!unlocked)"BLOQUEADO"else if(stage>=3)"CONCLUÍDO ★"else "ABRIR  ›",w*.84f,cy+h*.012f,paint)
+            paint.textSize=w*.023f
+            c.drawText(if(!unlocked)"BLOQUEADO"else if(stage>=3)"CONCLUÍDO ★"else "ABRIR  ›",w*.89f,cy+h*.058f,paint)
         }
         drawPremiumCard(c,RectF(w*.055f,h*.785f,w*.945f,h*.885f),20f,Color.argb(225,17,55,48),Color.argb(220,8,35,35))
         paint.textAlign=Paint.Align.LEFT;paint.typeface=Typeface.create("sans-serif-rounded",Typeface.BOLD)
