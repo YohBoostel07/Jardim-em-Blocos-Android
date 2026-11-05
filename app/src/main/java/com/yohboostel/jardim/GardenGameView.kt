@@ -700,6 +700,151 @@ class GardenGameView(context: Context) : View(context) {
         }
     }
 
+    private fun drawPieceTray(c: Canvas, w: Float, h: Float) {
+        paint.textAlign=Paint.Align.CENTER;paint.typeface=Typeface.create("sans-serif-condensed",Typeface.BOLD)
+        paint.color=Color.rgb(255,231,170);paint.textSize=w*.030f
+        c.drawText("ESCOLHA SUA PRÓXIMA JOGADA",w*.5f,slotsTop-h*.020f,paint)
+        val slotWidth=w*.275f
+        for(i in 0..2){
+            val centerX=w*(.18f+i*.32f);val active=i==selected&&pieces[i]!=null
+            val rect=RectF(centerX-slotWidth/2f,trayCenterY-h*.047f,centerX+slotWidth/2f,trayCenterY+h*.047f)
+            if(pieces[i]==null)drawPremiumCard(c,rect,19f,Color.argb(80,13,42,37),Color.argb(65,7,30,29))
+            else if(active)drawPremiumCard(c,rect,19f,Color.rgb(255,231,164),Color.rgb(211,153,75))
+            else drawPremiumCard(c,rect,19f,Color.rgb(38,104,78),Color.rgb(9,52,46))
+            if(active){paint.style=Paint.Style.STROKE;paint.strokeWidth=3f;paint.color=Color.rgb(255,245,194);c.drawRoundRect(rect,19f,19f,paint);paint.style=Paint.Style.FILL}
+            val piece=pieces[i]
+            if(piece!=null&&!(dragging&&i==selected))drawPiece(c,piece,centerX,trayCenterY-h*.004f,min(cell*.37f,h*.025f))
+            else if(piece==null){paint.color=Color.argb(150,235,247,232);paint.textSize=w*.045f;c.drawText("✓",centerX,trayCenterY+h*.012f,paint)}
+        }
+        if(comboAlpha>0f){paint.color=withAlpha(Color.rgb(255,225,137),(comboAlpha*255).toInt());paint.textSize=w*.043f;paint.typeface=Typeface.create("sans-serif-condensed",Typeface.BOLD);c.drawText(comboLabel,w*.5f,trayCenterY+h*.105f,paint)}
+    }
+
+    private fun drawFooter(c: Canvas, w: Float, h: Float) {
+        paint.color = if (activePower.isNotEmpty()) Color.rgb(255, 226, 160) else Color.rgb(218, 241, 220)
+        paint.textAlign = Paint.Align.CENTER
+        paint.typeface = Typeface.create("sans-serif-rounded", Typeface.BOLD)
+        paint.textSize = w * .025f
+        val hint = when (activePower) {
+            "hammer" -> "MARTELO ATIVO • TOQUE EM UM BLOCO"
+            "row" -> "BOMBA DE LINHA ATIVA • TOQUE NA LINHA"
+            else -> "Arraste uma peça para o tabuleiro"
+        }
+        c.drawText(hint, w / 2f, h * .955f, paint)
+    }
+
+    private fun drawShopScreen(c: Canvas, w: Float, h: Float) {
+        drawDim(c,w,h)
+        drawPremiumCard(c,RectF(w*.045f,h*.055f,w*.955f,h*.945f),30f,Color.rgb(247,239,207),Color.rgb(213,218,179))
+        paint.textAlign=Paint.Align.CENTER;paint.typeface=Typeface.create("serif",Typeface.BOLD);paint.color=Color.rgb(46,91,66);paint.textSize=w*.060f
+        c.drawText("ARSENAL DO JARDINEIRO",w*.5f,h*.125f,paint)
+        paint.textSize=w*.026f;paint.color=Color.rgb(156,105,45);c.drawText("✦  $coins MOEDAS DISPONÍVEIS",w*.5f,h*.17f,paint)
+        val names=listOf("Martelo","Bomba de linha","Nova mão")
+        val descriptions=listOf("Destrói um bloco escolhido","Libera uma linha inteira","Renova suas três peças")
+        val counts=intArrayOf(hammerCount,rowBombCount,rerollCount);val prices=intArrayOf(80,120,60)
+        val icons=listOf("⚒","✹","↻");val hues=intArrayOf(Color.rgb(213,142,74),Color.rgb(202,94,73),Color.rgb(76,151,166))
+        for(i in 0..2){
+            val top=h*(.225f+i*.185f);drawPremiumCard(c,RectF(w*.085f,top,w*.915f,top+h*.155f),20f,Color.rgb(255,252,231),Color.rgb(230,229,194))
+            paint.color=hues[i];c.drawCircle(w*.19f,top+h*.075f,w*.052f,paint);paint.color=Color.WHITE;paint.textSize=w*.052f;paint.typeface=Typeface.create("sans-serif",Typeface.BOLD);c.drawText(icons[i],w*.19f,top+h*.093f,paint)
+            paint.textAlign=Paint.Align.LEFT;paint.typeface=Typeface.create("sans-serif-condensed",Typeface.BOLD);paint.color=Color.rgb(47,91,64);paint.textSize=w*.035f;c.drawText(names[i],w*.29f,top+h*.055f,paint)
+            paint.typeface=Typeface.create("sans-serif",Typeface.NORMAL);paint.color=Color.rgb(103,111,87);paint.textSize=w*.021f;c.drawText(descriptions[i],w*.29f,top+h*.090f,paint)
+            paint.typeface=Typeface.create("sans-serif",Typeface.BOLD);paint.color=Color.rgb(164,111,43);paint.textSize=w*.024f;c.drawText("NO INVENTÁRIO: "+counts[i],w*.29f,top+h*.128f,paint)
+            val btn=RectF(w*.68f,top+h*.045f,w*.87f,top+h*.115f);drawPremiumCard(c,btn,12f,if(counts[i]>0)Color.rgb(93,170,105)else Color.rgb(242,196,91),if(counts[i]>0)Color.rgb(48,119,73)else Color.rgb(198,135,48))
+            paint.textAlign=Paint.Align.CENTER;paint.color=Color.WHITE;paint.textSize=w*.023f;c.drawText(if(counts[i]>0)"USAR"else prices[i].toString()+" ✦",btn.centerX(),btn.centerY()+w*.008f,paint)
+        }
+        val back=RectF(w*.23f,h*.825f,w*.77f,h*.90f);drawPremiumCard(c,back,18f,Color.rgb(67,151,91),Color.rgb(33,103,67))
+        paint.textAlign=Paint.Align.CENTER;paint.color=Color.WHITE;paint.textSize=w*.029f;c.drawText("VOLTAR AO JOGO",w*.5f,h*.87f,paint)
+    }
+
+    private fun savePowerInventory() {
+        prefs.edit().putInt("power_hammer",hammerCount)
+            .putInt("power_row_bomb",rowBombCount)
+            .putInt("power_reroll",rerollCount).apply()
+        saveGardenProgress()
+    }
+
+    private fun activateShopItem(index:Int) {
+        val counts=intArrayOf(hammerCount,rowBombCount,rerollCount)
+        val prices=intArrayOf(80,120,60)
+        if(counts[index]>0){
+            when(index){
+                0->{activePower="hammer";showShop=false}
+                1->{activePower="row";showShop=false}
+                2->{rerollCount--;showShop=false;pieces=MutableList(3){newPiece()};selected=0;gameOver=false;emitBurst(width*.5f,height*.52f,Color.rgb(255,220,125),28,1.7f);animateEffects();playPowerSound("reroll")}
+            }
+            savePowerInventory()
+            playTone(ToneGenerator.TONE_PROP_ACK,130)
+            comboLabel=when(index){0->"MARTELO ATIVO";1->"BOMBA DE LINHA ATIVA";else->"NOVAS PEÇAS!"}
+        } else if(coins>=prices[index]){
+            coins-=prices[index]
+            when(index){0->hammerCount++;1->rowBombCount++;2->rerollCount++}
+            savePowerInventory()
+            playTone(ToneGenerator.TONE_PROP_ACK,130)
+        } else {
+            playTone(ToneGenerator.TONE_PROP_BEEP,90)
+        }
+    }
+
+    private fun usePowerAt(x:Float,y:Float) {
+        if (activePower.isEmpty()) return
+        if (x < boardLeft || x >= boardLeft + boardSize || y < boardTop || y >= boardTop + boardSize) {
+            playTone(ToneGenerator.TONE_PROP_BEEP, 55)
+            return
+        }
+        val row = ((y - boardTop) / cell).toInt().coerceIn(0, 8)
+        val col = ((x - boardLeft) / cell).toInt().coerceIn(0, 8)
+        val powerUsed = activePower
+        var removed = 0
+        if (powerUsed == "hammer") {
+            if (board[row][col]) {
+                emitBurst(boardLeft + (col + .5f) * cell, boardTop + (row + .5f) * cell, colors[row][col], 18, 1.25f)
+                board[row][col] = false
+                colors[row][col] = Color.TRANSPARENT
+                removed = 1
+            }
+        } else if (powerUsed == "row") {
+            for (c in 0..8) if (board[row][c]) {
+                emitBurst(boardLeft + (c + .5f) * cell, boardTop + (row + .5f) * cell, colors[row][c], 9, 1.1f)
+                board[row][c] = false
+                colors[row][c] = Color.TRANSPARENT
+                removed++
+            }
+        }
+        if (removed > 0) {
+            score += removed * 10
+            if (score > best) { best = score; prefs.edit().putInt("best_score", best).apply() }
+            level = 1 + score / 500
+            if (powerUsed == "hammer") hammerCount-- else rowBombCount--
+            activePower = ""
+            savePowerInventory()
+            animateEffects()
+            playPowerSound(powerUsed)
+            gameOver = !availablePiecesHaveMove()
+        } else {
+            // O item continua disponível se a célula ou linha estiver vazia.
+            playTone(ToneGenerator.TONE_PROP_BEEP, 65)
+        }
+        invalidate()
+    }
+
+    private fun drawPiece(c: Canvas, piece: Piece, cx: Float, cy: Float, size: Float) {
+        val maxX=piece.cells.maxOf{it.first}+1;val maxY=piece.cells.maxOf{it.second}+1
+        val unit=min(size*2.35f/maxX,size*2.35f/maxY)
+        piece.cells.forEach{(x,y)->val left=cx-maxX*unit/2f+x*unit;val top=cy-maxY*unit/2f+y*unit;drawBlock(c,RectF(left,top,left+unit-3f,top+unit-3f),piece.color,7f)}
+    }
+
+    private fun drawBlock(c: Canvas, rect: RectF, base: Int, radius: Float, alpha: Int = 255) {
+        paint.color=Color.argb(alpha/2,0,0,0)
+        c.drawRoundRect(RectF(rect.left+2f,rect.top+4f,rect.right+2f,rect.bottom+4f),radius,radius,paint)
+        paint.shader=LinearGradient(rect.left,rect.top,rect.right,rect.bottom,
+            intArrayOf(withAlpha(base,alpha),withAlpha(Color.rgb(255,255,255),min(alpha,75)),withAlpha(base,alpha)),
+            floatArrayOf(0f,.22f,1f),Shader.TileMode.CLAMP)
+        c.drawRoundRect(rect,radius,radius,paint);paint.shader=null
+        paint.color=withAlpha(Color.WHITE,min(alpha,105))
+        c.drawRoundRect(RectF(rect.left+radius*.65f,rect.top+radius*.38f,rect.right-radius*.65f,rect.top+radius*.38f+max(2f,rect.height()*.055f)),radius,radius,paint)
+        paint.color=withAlpha(Color.rgb(10,35,30),min(alpha,65))
+        c.drawRoundRect(RectF(rect.left+radius*.5f,rect.bottom-radius*.32f,rect.right-radius*.5f,rect.bottom-radius*.13f),radius,radius,paint)
+    }
+
     private fun drawSparks(c: Canvas) {
         val t = effectProgress
         blastCenters.forEach { blast ->
