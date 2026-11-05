@@ -18,6 +18,9 @@ import android.animation.ValueAnimator
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.random.Random
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class GardenGameView(context: Context) : View(context) {
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
@@ -62,6 +65,14 @@ class GardenGameView(context: Context) : View(context) {
     private var gamesPlayed = prefs.getInt("games_played", 0)
     private var totalLines = prefs.getInt("total_lines", 0)
     private var bestCombo = prefs.getInt("best_combo", 0)
+    private var showGardens = false
+    private var coins = prefs.getInt("garden_coins", 100)
+    private val gardenNames = listOf("Jardim das Flores", "Bosque Encantado", "Lago Sereno")
+    private val gardenDescriptions = listOf("Recupere o canteiro e traga as cores de volta.", "Desperte a vida entre as árvores.", "Limpe as águas e floresça as margens.")
+    private val gardenCosts = arrayOf(intArrayOf(50, 80, 120), intArrayOf(100, 150, 200), intArrayOf(150, 200, 250))
+    private val gardenStages = IntArray(3) { prefs.getInt("garden_stage_$it", 0).coerceIn(0, 3) }
+    private var dailyLines = prefs.getInt("daily_lines", 0)
+    private var dailyRewardClaimed = prefs.getBoolean("daily_reward_claimed", false)
     private var boardLeft = 0f
     private var boardTop = 0f
     private var cell = 0f
@@ -83,6 +94,7 @@ class GardenGameView(context: Context) : View(context) {
     init {
         isFocusable = true
         isClickable = true
+        refreshDailyMission()
     }
 
     private fun newPiece(): Piece {
@@ -120,6 +132,7 @@ class GardenGameView(context: Context) : View(context) {
         drawPieceTray(canvas, w, h)
         drawFooter(canvas, w, h)
         if (sparks.isNotEmpty()) drawSparks(canvas)
+        if (showGardens) drawGardensScreen(canvas, w, h)
         if (showTutorial) drawTutorial(canvas, w, h)
         else if (confirmRestart) drawRestartConfirmation(canvas, w, h)
         else if (paused) drawPauseMenu(canvas, w, h)
@@ -147,6 +160,7 @@ class GardenGameView(context: Context) : View(context) {
         paint.textSize = w * .025f
         c.drawText("CULTIVE  •  COMBINE  •  FLORESÇA", w / 2f, h * .105f, paint)
 
+        drawGardenShortcut(c, w, h)
         drawStat(c, w * .25f, h * .165f, "PONTOS", score.toString())
         drawStat(c, w * .69f, h * .165f, "RECORDE", max(best, score).toString())
         paint.color = Color.rgb(255, 226, 160)
@@ -157,6 +171,138 @@ class GardenGameView(context: Context) : View(context) {
         paint.color = Color.WHITE
         paint.textSize = w * .043f
         c.drawText("Ⅱ", button.centerX(), button.centerY() + w * .014f, paint)
+    }
+
+    private fun drawGardenShortcut(c: Canvas, w: Float, h: Float) {
+        val button = RectF(w * .035f, h * .125f, w * .145f, h * .205f)
+        rounded(c, button, 18f, Color.argb(165, 5, 35, 29))
+        paint.color = Color.rgb(255, 232, 166)
+        paint.textAlign = Paint.Align.CENTER
+        paint.typeface = Typeface.create("sans-serif-rounded", Typeface.BOLD)
+        paint.textSize = w * .047f
+        c.drawText("✿", button.centerX(), button.centerY() + w * .016f, paint)
+    }
+
+    private fun drawGardensScreen(c: Canvas, w: Float, h: Float) {
+        drawDim(c, w, h)
+        rounded(c, RectF(w * .045f, h * .075f, w * .955f, h * .94f), 28f, Color.rgb(239, 231, 197))
+        paint.textAlign = Paint.Align.CENTER
+        paint.typeface = Typeface.create("sans-serif-rounded", Typeface.BOLD)
+        paint.color = Color.rgb(47, 91, 64)
+        paint.textSize = w * .058f
+        c.drawText("Seus jardins", w / 2f, h * .145f, paint)
+        paint.textSize = w * .031f
+        paint.color = Color.rgb(174, 116, 43)
+        c.drawText("MOEDAS  $coins", w / 2f, h * .19f, paint)
+
+        for (i in 0..2) {
+            val top = h * (.225f + i * .174f)
+            val bottom = top + h * .155f
+            val unlocked = i == 0 || gardenStages[i - 1] >= 3
+            val stage = gardenStages[i]
+            val card = RectF(w * .085f, top, w * .915f, bottom)
+            rounded(c, card, 18f, if (unlocked) Color.rgb(255, 250, 229) else Color.rgb(210, 207, 185))
+            paint.textAlign = Paint.Align.LEFT
+            paint.typeface = Typeface.create("sans-serif-rounded", Typeface.BOLD)
+            paint.color = Color.rgb(47, 91, 64)
+            paint.textSize = w * .036f
+            c.drawText(gardenNames[i], w * .13f, top + h * .043f, paint)
+            paint.typeface = Typeface.create("sans-serif", Typeface.NORMAL)
+            paint.textSize = w * .025f
+            paint.color = Color.rgb(103, 111, 87)
+            c.drawText(if (unlocked) gardenDescriptions[i] else "Conclua o jardim anterior para liberar.", w * .13f, top + h * .078f, paint)
+            val progressRect = RectF(w * .13f, top + h * .103f, w * .55f, top + h * .119f)
+            rounded(c, progressRect, 8f, Color.rgb(218, 220, 195))
+            if (stage > 0) {
+                val fill = RectF(progressRect.left, progressRect.top, progressRect.left + progressRect.width() * stage / 3f, progressRect.bottom)
+                rounded(c, fill, 8f, Color.rgb(91, 161, 99))
+            }
+            paint.textAlign = Paint.Align.LEFT
+            paint.color = Color.rgb(85, 104, 75)
+            paint.textSize = w * .023f
+            c.drawText("$stage/3 etapas", w * .13f, top + h * .145f, paint)
+            val action = RectF(w * .62f, top + h * .045f, w * .87f, top + h * .112f)
+            val label = when {
+                !unlocked -> "BLOQUEADO"
+                stage >= 3 -> "CONCLUÍDO"
+                else -> "✦ ${gardenCosts[i][stage]}"
+            }
+            rounded(c, action, 13f, if (!unlocked || stage >= 3) Color.rgb(184, 194, 169) else Color.rgb(83, 151, 91))
+            paint.textAlign = Paint.Align.CENTER
+            paint.typeface = Typeface.create("sans-serif", Typeface.BOLD)
+            paint.color = if (!unlocked || stage >= 3) Color.rgb(76, 91, 66) else Color.WHITE
+            paint.textSize = w * .026f
+            c.drawText(label, action.centerX(), action.centerY() + w * .009f, paint)
+            paint.textSize = w * .040f
+            paint.color = when (stage) {
+                0 -> Color.rgb(137, 116, 82)
+                1 -> Color.rgb(107, 148, 83)
+                2 -> Color.rgb(80, 157, 99)
+                else -> Color.rgb(225, 163, 57)
+            }
+            c.drawText(if (stage == 0) "♧" else if (stage == 3) "✿" else "♣", w * .77f, top + h * .14f, paint)
+        }
+
+        val missionTop = h * .755f
+        rounded(c, RectF(w * .085f, missionTop, w * .915f, h * .865f), 16f, Color.rgb(224, 239, 211))
+        paint.textAlign = Paint.Align.LEFT
+        paint.typeface = Typeface.create("sans-serif-rounded", Typeface.BOLD)
+        paint.color = Color.rgb(47, 91, 64)
+        paint.textSize = w * .030f
+        c.drawText("MISSÃO DIÁRIA", w * .13f, missionTop + h * .038f, paint)
+        paint.typeface = Typeface.create("sans-serif", Typeface.NORMAL)
+        paint.textSize = w * .025f
+        c.drawText("Limpe 5 linhas  •  $dailyLines/5", w * .13f, missionTop + h * .073f, paint)
+        val missionButton = RectF(w * .65f, missionTop + h * .022f, w * .87f, missionTop + h * .088f)
+        val canClaim = dailyLines >= 5 && !dailyRewardClaimed
+        rounded(c, missionButton, 12f, if (canClaim) Color.rgb(83, 151, 91) else Color.rgb(188, 199, 172))
+        paint.textAlign = Paint.Align.CENTER
+        paint.typeface = Typeface.create("sans-serif", Typeface.BOLD)
+        paint.color = if (canClaim) Color.WHITE else Color.rgb(76, 91, 66)
+        paint.textSize = w * .024f
+        c.drawText(if (dailyRewardClaimed) "RESGATADA" else if (canClaim) "RESGATAR +100" else "100 MOEDAS", missionButton.centerX(), missionButton.centerY() + w * .008f, paint)
+
+        val back = RectF(w * .25f, h * .885f, w * .75f, h * .925f)
+        rounded(c, back, 14f, Color.rgb(71, 145, 91))
+        paint.color = Color.WHITE
+        paint.textSize = w * .029f
+        c.drawText("VOLTAR AO JOGO", back.centerX(), back.centerY() + w * .009f, paint)
+    }
+
+    private fun refreshDailyMission() {
+        val today = SimpleDateFormat("yyyyMMdd", Locale.US).format(Date())
+        val savedDay = prefs.getString("daily_mission_day", "")
+        if (savedDay != today) {
+            dailyLines = 0
+            dailyRewardClaimed = false
+            prefs.edit().putString("daily_mission_day", today)
+                .putInt("daily_lines", 0).putBoolean("daily_reward_claimed", false).apply()
+        }
+    }
+
+    private fun saveGardenProgress() {
+        val editor = prefs.edit().putInt("garden_coins", coins)
+            .putInt("daily_lines", dailyLines)
+            .putBoolean("daily_reward_claimed", dailyRewardClaimed)
+        for (i in 0..2) editor.putInt("garden_stage_$i", gardenStages[i])
+        editor.apply()
+    }
+
+    private fun restoreGarden(index: Int) {
+        if (index !in 0..2) return
+        val unlocked = index == 0 || gardenStages[index - 1] >= 3
+        val stage = gardenStages[index]
+        if (!unlocked || stage >= 3) return
+        val cost = gardenCosts[index][stage]
+        if (coins >= cost) {
+            coins -= cost
+            gardenStages[index]++
+            saveGardenProgress()
+            playTone(ToneGenerator.TONE_PROP_ACK, 120)
+            performHapticFeedback(android.view.HapticFeedbackConstants.CONFIRM)
+        } else {
+            playTone(ToneGenerator.TONE_PROP_BEEP, 80)
+        }
     }
 
     private fun drawStat(c: Canvas, x: Float, y: Float, label: String, value: String) {
@@ -396,7 +542,12 @@ class GardenGameView(context: Context) : View(context) {
         fullCols.forEach { colIndex -> (0..8).forEach { r -> clearedCells.add(r to colIndex) } }
 
         val lines = fullRows.size + fullCols.size
+        coins += piece.cells.size
         if (lines > 0) {
+            coins += lines * 25
+            dailyLines += lines
+            refreshDailyMission()
+            saveGardenProgress()
             clearedCells.forEach { (r, c) ->
                 sparks = sparks + Spark(boardLeft + (c + .5f) * cell,
                     boardTop + (r + .5f) * cell, colors[r][c], cell * .17f)
@@ -511,7 +662,7 @@ class GardenGameView(context: Context) : View(context) {
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
         if (event.action == MotionEvent.ACTION_DOWN) {
-            if (showTutorial || paused || gameOver || confirmRestart) return true
+            if (showTutorial || paused || gameOver || confirmRestart || showGardens) return true
             if (event.y < height * .22f && event.x > width * .82f) return true
             if (event.y > trayCenterY - height * .06f && event.y < trayCenterY + height * .06f) {
                 choosePieceAt(event.x)
@@ -540,6 +691,23 @@ class GardenGameView(context: Context) : View(context) {
             MotionEvent.ACTION_UP -> {
                 if (showTutorial) {
                     finishTutorial()
+                    return true
+                }
+                if (showGardens) {
+                    when {
+                        event.y in height * .875f..height * .94f -> showGardens = false
+                        event.y in height * .755f..height * .865f &&
+                            event.x > width * .62f && dailyLines >= 5 && !dailyRewardClaimed -> {
+                            dailyRewardClaimed = true
+                            coins += 100
+                            saveGardenProgress()
+                            playTone(ToneGenerator.TONE_PROP_ACK, 150)
+                        }
+                        event.y in height * .225f..height * .38f -> restoreGarden(0)
+                        event.y in height * .399f..height * .554f -> restoreGarden(1)
+                        event.y in height * .573f..height * .728f -> restoreGarden(2)
+                    }
+                    invalidate()
                     return true
                 }
                 if (confirmRestart) {
@@ -577,6 +745,11 @@ class GardenGameView(context: Context) : View(context) {
                     dragging = false
                     previewRow = -1
                     previewCol = -1
+                    invalidate()
+                    return true
+                }
+                if (event.y < height * .22f && event.x < width * .16f) {
+                    showGardens = true
                     invalidate()
                     return true
                 }
