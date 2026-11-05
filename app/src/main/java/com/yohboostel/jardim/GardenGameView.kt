@@ -67,6 +67,14 @@ class GardenGameView(context: Context) : View(context) {
     private var bestCombo = prefs.getInt("best_combo", 0)
     private var mainMenuOpen = true
     private var showAchievements = false
+    private var showExpeditions = false
+    private var expeditionUnlocked = prefs.getInt("expedition_unlocked", 0).coerceIn(0, 5)
+    private var expeditionStage = 0
+    private var activeExpedition = false
+    private var showExpeditionComplete = false
+    private val expeditionGoals = intArrayOf(300, 600, 900, 1300, 1800)
+    private val expeditionRewards = intArrayOf(100, 150, 200, 300, 500)
+    private val expeditionNames = listOf("Primeiros brotos", "Canteiro em ordem", "Jardim vibrante", "Bosque renovado", "Paraíso florescido")
     private var showGardens = false
     private var gardenDetailOpen = false
     private var selectedGarden = 0
@@ -133,7 +141,11 @@ class GardenGameView(context: Context) : View(context) {
         paint.shader = null
         drawGardenBackdrop(canvas, w, h)
         if (mainMenuOpen) {
-            if (showAchievements) drawAchievementsScreen(canvas, w, h) else drawMainMenu(canvas, w, h)
+            when {
+                showAchievements -> drawAchievementsScreen(canvas, w, h)
+                showExpeditions -> drawExpeditionsScreen(canvas, w, h)
+                else -> drawMainMenu(canvas, w, h)
+            }
             return
         }
         boardSize = min(w * .90f, h * .455f)
@@ -152,6 +164,7 @@ class GardenGameView(context: Context) : View(context) {
             if (gardenDetailOpen) drawGardenDetailScreen(canvas, w, h) else drawGardensScreen(canvas, w, h)
         }
         if (showShop) drawShopScreen(canvas, w, h)
+        if (showExpeditionComplete) drawExpeditionCompleteScreen(canvas, w, h)
         if (showTutorial) drawTutorial(canvas, w, h)
         else if (confirmRestart) drawRestartConfirmation(canvas, w, h)
         else if (paused) drawPauseMenu(canvas, w, h)
@@ -175,10 +188,15 @@ class GardenGameView(context: Context) : View(context) {
         val play=RectF(w*.15f,h*.65f,w*.85f,h*.735f); rounded(c,play,22f,Color.rgb(255,205,91))
         paint.color=Color.rgb(57,82,48); paint.textSize=w*.043f; paint.typeface=Typeface.create("sans-serif-rounded",Typeface.BOLD)
         c.drawText("JOGAR",play.centerX(),play.centerY()+w*.015f,paint)
-        val gardens=RectF(w*.15f,h*.755f,w*.47f,h*.835f); val achievements=RectF(w*.53f,h*.755f,w*.85f,h*.835f)
-        rounded(c,gardens,18f,Color.rgb(239,231,197)); rounded(c,achievements,18f,Color.rgb(239,231,197))
-        paint.color=Color.rgb(47,91,64); paint.textSize=w*.027f
+        val gardens=RectF(w*.07f,h*.755f,w*.35f,h*.835f)
+        val expedition=RectF(w*.36f,h*.755f,w*.64f,h*.835f)
+        val achievements=RectF(w*.65f,h*.755f,w*.93f,h*.835f)
+        rounded(c,gardens,16f,Color.rgb(239,231,197))
+        rounded(c,expedition,16f,Color.rgb(255,218,133))
+        rounded(c,achievements,16f,Color.rgb(239,231,197))
+        paint.color=Color.rgb(47,91,64); paint.textSize=w*.023f
         c.drawText("MEUS JARDINS",gardens.centerX(),gardens.centerY()+w*.01f,paint)
+        c.drawText("EXPEDIÇÃO",expedition.centerX(),expedition.centerY()+w*.01f,paint)
         c.drawText("CONQUISTAS",achievements.centerX(),achievements.centerY()+w*.01f,paint)
         paint.color=Color.rgb(255,232,166); paint.textSize=w*.031f
         c.drawText("✦  $coins moedas",w/2f,h*.895f,paint)
@@ -203,6 +221,66 @@ class GardenGameView(context: Context) : View(context) {
         }
         val back=RectF(w*.22f,h*.84f,w*.78f,h*.91f);rounded(c,back,16f,Color.rgb(71,145,91));paint.color=Color.WHITE;paint.textSize=w*.028f;c.drawText("VOLTAR AO MENU",back.centerX(),back.centerY()+w*.01f,paint)
     }
+    private fun drawExpeditionsScreen(c: Canvas, w: Float, h: Float) {
+        drawDim(c, w, h)
+        rounded(c, RectF(w*.045f,h*.055f,w*.955f,h*.945f), 28f, Color.rgb(239,231,197))
+        paint.textAlign = Paint.Align.CENTER
+        paint.typeface = Typeface.create("sans-serif-rounded", Typeface.BOLD)
+        paint.color = Color.rgb(47,91,64)
+        paint.textSize = w*.058f
+        c.drawText("Expedição dos Jardins", w/2f, h*.125f, paint)
+        paint.typeface = Typeface.create("sans-serif", Typeface.NORMAL)
+        paint.textSize = w*.025f
+        paint.color = Color.rgb(103,111,87)
+        c.drawText("Supere metas de pontuação para avançar", w/2f, h*.165f, paint)
+        for (i in 0..4) {
+            val top = h*(.205f+i*.118f)
+            val unlocked = i <= expeditionUnlocked
+            val completed = i < expeditionUnlocked
+            rounded(c, RectF(w*.085f,top,w*.915f,top+h*.102f), 15f,
+                if (completed) Color.rgb(220,239,207) else if (unlocked) Color.rgb(255,250,229) else Color.rgb(215,215,195))
+            paint.textAlign = Paint.Align.LEFT
+            paint.typeface = Typeface.create("sans-serif-rounded", Typeface.BOLD)
+            paint.color = if (unlocked) Color.rgb(47,91,64) else Color.rgb(130,133,116)
+            paint.textSize = w*.027f
+            c.drawText("ETAPA "+(i+1)+"  •  "+expeditionNames[i], w*.13f, top+h*.039f, paint)
+            paint.typeface = Typeface.create("sans-serif", Typeface.NORMAL)
+            paint.textSize = w*.021f
+            paint.color = Color.rgb(103,111,87)
+            c.drawText("Alcance "+expeditionGoals[i]+" pontos em uma partida", w*.13f, top+h*.073f, paint)
+            val reward = if (completed) "CONCLUÍDA" else if (unlocked) "+"+expeditionRewards[i]+" ✦" else "BLOQUEADA"
+            paint.textAlign = Paint.Align.RIGHT
+            paint.typeface = Typeface.create("sans-serif", Typeface.BOLD)
+            paint.textSize = w*.021f
+            paint.color = if (completed) Color.rgb(65,135,79) else if (unlocked) Color.rgb(174,116,43) else Color.rgb(130,133,116)
+            c.drawText(reward, w*.88f, top+h*.055f, paint)
+        }
+        rounded(c, RectF(w*.22f,h*.825f,w*.78f,h*.90f), 16f, Color.rgb(71,145,91))
+        paint.textAlign = Paint.Align.CENTER
+        paint.color = Color.WHITE
+        paint.textSize = w*.029f
+        c.drawText("VOLTAR AO MENU", w*.5f, h*.87f, paint)
+    }
+
+    private fun drawExpeditionCompleteScreen(c: Canvas, w: Float, h: Float) {
+        drawDim(c,w,h)
+        drawPanel(c,w,h*.30f,h*.72f)
+        paint.textAlign=Paint.Align.CENTER
+        paint.typeface=Typeface.create("sans-serif-rounded",Typeface.BOLD)
+        paint.color=Color.rgb(47,91,64)
+        paint.textSize=w*.060f
+        c.drawText("ETAPA CONCLUÍDA!",w/2f,h*.405f,paint)
+        paint.textSize=w*.034f
+        paint.color=Color.rgb(174,116,43)
+        c.drawText(expeditionNames[expeditionStage],w/2f,h*.465f,paint)
+        paint.typeface=Typeface.create("sans-serif",Typeface.NORMAL)
+        paint.textSize=w*.030f
+        paint.color=Color.rgb(103,111,87)
+        c.drawText("Você recebeu "+expeditionRewards[expeditionStage]+" moedas",w/2f,h*.515f,paint)
+        c.drawText("Próxima etapa: "+(expeditionUnlocked+1)+" de 5",w/2f,h*.56f,paint)
+        drawButton(c,w,h*.645f,"CONTINUAR",true)
+    }
+
     private fun drawGardenBackdrop(c: Canvas, w: Float, h: Float) {
         paint.color = Color.argb(24, 255, 255, 255)
         for (i in 0..6) c.drawCircle(w * (i / 6f), h * .19f, w * .11f, paint)
@@ -228,6 +306,11 @@ class GardenGameView(context: Context) : View(context) {
         drawStat(c, w * .25f, h * .165f, "PONTOS", score.toString())
         drawStat(c, w * .69f, h * .165f, "RECORDE", max(best, score).toString())
         paint.color=Color.rgb(255,226,160);paint.textSize=w*.025f;c.drawText("NÍVEL $level  •  ✦ $coins",w*.50f,h*.216f,paint)
+        if (activeExpedition) {
+            paint.color = Color.rgb(255,235,177)
+            paint.textSize = w*.021f
+            c.drawText("EXPEDIÇÃO "+(expeditionStage+1)+"  •  META "+expeditionGoals[expeditionStage],w*.5f,h*.242f,paint)
+        }
         val lp=(score%500)/500f;val lb=RectF(w*.25f,h*.222f,w*.75f,h*.229f);rounded(c,lb,5f,Color.argb(85,235,247,232));if(lp>0f)rounded(c,RectF(lb.left,lb.top,lb.left+lb.width()*lp,lb.bottom),5f,Color.rgb(255,213,112))
         val shopButton = RectF(w * .715f, h * .125f, w * .835f, h * .205f)
         rounded(c, shopButton, 18f, Color.argb(175, 5, 35, 29))
@@ -798,7 +881,12 @@ class GardenGameView(context: Context) : View(context) {
         paint.textSize = w * .035f
         c.drawText("Pontuação: $score", w / 2f, h * .465f, paint)
         c.drawText("Recorde: $best", w / 2f, h * .505f, paint)
-        drawButton(c, w, h * .565f, "JOGAR NOVAMENTE", true)
+        if (activeExpedition) {
+            paint.color = Color.rgb(174,116,43)
+            paint.textSize = w*.027f
+            c.drawText("Meta da etapa: "+expeditionGoals[expeditionStage]+" pontos",w/2f,h*.535f,paint)
+        }
+        drawButton(c, w, h * .565f, if(activeExpedition) "TENTAR NOVAMENTE" else "JOGAR NOVAMENTE", true)
         drawButton(c, w, h * .655f, "MENU PRINCIPAL", false)
     }
 
@@ -903,7 +991,17 @@ class GardenGameView(context: Context) : View(context) {
         } else if (pieces[selected] == null) {
             selected = pieces.indexOfFirst { it != null }.coerceAtLeast(0)
         }
-        gameOver = !availablePiecesHaveMove()
+        if (activeExpedition && score >= expeditionGoals[expeditionStage]) {
+            activeExpedition = false
+            showExpeditionComplete = true
+            coins += expeditionRewards[expeditionStage]
+            expeditionUnlocked = max(expeditionUnlocked, expeditionStage + 1).coerceAtMost(5)
+            prefs.edit().putInt("expedition_unlocked", expeditionUnlocked).apply()
+            saveGardenProgress()
+            playTone(ToneGenerator.TONE_PROP_ACK, 220)
+            performHapticFeedback(android.view.HapticFeedbackConstants.CONFIRM)
+        }
+        gameOver = !showExpeditionComplete && !availablePiecesHaveMove()
     }
 
     private fun animateEffects() {
@@ -1009,7 +1107,22 @@ class GardenGameView(context: Context) : View(context) {
             }
             MotionEvent.ACTION_UP -> {
                 if (mainMenuOpen) {
-                    if (showAchievements) {
+                    if (showExpeditions) {
+                        if (event.y > height*.80f) {
+                            showExpeditions = false
+                        } else {
+                            val idx=((event.y/height-.205f)/.118f).toInt()
+                            if (idx in 0..4 && idx <= expeditionUnlocked) {
+                                expeditionStage = idx
+                                activeExpedition = true
+                                showExpeditions = false
+                                showAchievements = false
+                                mainMenuOpen = false
+                                resetGame()
+                                if (showTutorial) finishTutorial()
+                            }
+                        }
+                    } else if (showAchievements) {
                         if (event.y > height*.80f) showAchievements=false
                         else {
                             val idx=((event.y/height-.195f)/.102f).toInt()
@@ -1022,12 +1135,22 @@ class GardenGameView(context: Context) : View(context) {
                         }
                     } else {
                         when {
-                            event.y in height*.64f..height*.745f -> {mainMenuOpen=false;if(showTutorial)finishTutorial()}
-                            event.y in height*.75f..height*.85f && event.x<width*.50f -> {mainMenuOpen=false;showGardens=true}
-                            event.y in height*.75f..height*.85f && event.x>=width*.50f -> showAchievements=true
+                            event.y in height*.64f..height*.745f -> {mainMenuOpen=false;showExpeditions=false;if(showTutorial)finishTutorial()}
+                            event.y in height*.75f..height*.85f && event.x<width*.36f -> {mainMenuOpen=false;showGardens=true}
+                            event.y in height*.75f..height*.85f && event.x in width*.36f..width*.64f -> showExpeditions=true
+                            event.y in height*.75f..height*.85f && event.x>width*.64f -> showAchievements=true
                         }
                     }
                     invalidate(); return true
+                }
+                if (showExpeditionComplete) {
+                    if (event.y > height*.59f) {
+                        showExpeditionComplete = false
+                        mainMenuOpen = true
+                        showExpeditions = true
+                    }
+                    invalidate()
+                    return true
                 }
                 if (showTutorial) {
                     finishTutorial()
