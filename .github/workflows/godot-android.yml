@@ -1,0 +1,67 @@
+name: Build Godot Android Prototype
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ godot-prototype ]
+    paths:
+      - 'godot/**'
+      - '.github/workflows/godot-android.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  export-android:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout prototype branch
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android build tools
+        run: |
+          sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0" "ndk;27.2.12479018"
+
+      - name: Download Godot 4.4.1 and Android export templates
+        run: |
+          mkdir -p "$HOME/godot" "$HOME/.local/share/godot/export_templates/4.4.1.stable"
+          curl -L --fail -o "$HOME/godot/godot.zip" "https://github.com/godotengine/godot/releases/download/4.4.1-stable/Godot_v4.4.1-stable_linux.x86_64.zip"
+          unzip -o "$HOME/godot/godot.zip" -d "$HOME/godot"
+          curl -L --fail -o "$HOME/godot/templates.tpz" "https://github.com/godotengine/godot/releases/download/4.4.1-stable/Godot_v4.4.1-stable_export_templates.tpz"
+          unzip -o "$HOME/godot/templates.tpz" -d "$HOME/.local/share/godot/export_templates/4.4.1.stable"
+          chmod +x "$HOME/godot/Godot_v4.4.1-stable_linux.x86_64"
+
+      - name: Configure Godot Android SDK paths
+        run: |
+          mkdir -p "$HOME/.config/godot"
+          cat > "$HOME/.config/godot/editor_settings-4.tres" <<EOF
+          [gd_resource type="EditorSettings" format=3]
+          [resource]
+          export/android/android_sdk_path = "$ANDROID_HOME"
+          export/android/java_sdk_path = "$JAVA_HOME"
+          EOF
+
+      - name: Validate Godot project
+        run: |
+          "$HOME/godot/Godot_v4.4.1-stable_linux.x86_64" --headless --editor --path godot --quit
+
+      - name: Export Android APK
+        run: |
+          mkdir -p godot/build
+          "$HOME/godot/Godot_v4.4.1-stable_linux.x86_64" --headless --path godot --export-debug "Android" godot/build/Jardim-em-Blocos-Godot.apk
+
+      - name: Upload Godot APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Jardim-em-Blocos-Godot-Prototype
+          path: godot/build/Jardim-em-Blocos-Godot.apk
+          if-no-files-found: error
