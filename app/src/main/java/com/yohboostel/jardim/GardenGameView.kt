@@ -183,6 +183,68 @@ class GardenGameView(context: Context) : View(context) {
         c.drawText("✿", button.centerX(), button.centerY() + w * .016f, paint)
     }
 
+    private fun drawGardenMiniature(c: Canvas, index: Int, stage: Int, rect: RectF) {
+        rounded(c, rect, 13f, when (index) {
+            0 -> Color.rgb(205, 229, 188)
+            1 -> Color.rgb(190, 218, 184)
+            else -> Color.rgb(184, 218, 218)
+        })
+        val ground = RectF(rect.left, rect.top + rect.height() * .67f, rect.right, rect.bottom)
+        rounded(c, ground, 10f, when (index) {
+            2 -> Color.rgb(105, 166, 151)
+            else -> Color.rgb(133, 157, 91)
+        })
+        paint.color = Color.argb(90, 255, 255, 255)
+        c.drawCircle(rect.left + rect.width() * .25f, rect.top + rect.height() * .24f, rect.width() * .10f, paint)
+        c.drawCircle(rect.left + rect.width() * .34f, rect.top + rect.height() * .22f, rect.width() * .075f, paint)
+
+        if (index == 2) {
+            paint.color = Color.rgb(77, 160, 177)
+            c.drawOval(rect.left + rect.width() * .12f, rect.top + rect.height() * .57f,
+                rect.right - rect.width() * .10f, rect.bottom - rect.height() * .08f, paint)
+            paint.color = Color.argb(120, 255, 255, 255)
+            c.drawOval(rect.left + rect.width() * .25f, rect.top + rect.height() * .64f,
+                rect.left + rect.width() * .58f, rect.top + rect.height() * .72f, paint)
+        }
+
+        if (stage >= 1) {
+            val plantX = rect.left + rect.width() * .50f
+            val baseY = rect.top + rect.height() * .78f
+            paint.color = Color.rgb(55, 117, 64)
+            paint.strokeWidth = max(2f, rect.width() * .025f)
+            c.drawLine(plantX, baseY, plantX, rect.top + rect.height() * .40f, paint)
+            c.drawOval(plantX - rect.width() * .18f, rect.top + rect.height() * .48f,
+                plantX, rect.top + rect.height() * .61f, paint)
+            c.drawOval(plantX, rect.top + rect.height() * .42f,
+                plantX + rect.width() * .18f, rect.top + rect.height() * .56f, paint)
+        }
+
+        if (stage >= 2) {
+            val treeX = rect.left + rect.width() * .76f
+            val treeY = rect.top + rect.height() * .55f
+            paint.color = Color.rgb(112, 78, 48)
+            c.drawRect(treeX - rect.width() * .035f, treeY, treeX + rect.width() * .035f,
+                rect.bottom - rect.height() * .13f, paint)
+            paint.color = Color.rgb(58, 133, 76)
+            c.drawCircle(treeX, treeY - rect.height() * .09f, rect.width() * .18f, paint)
+            c.drawCircle(treeX - rect.width() * .10f, treeY, rect.width() * .13f, paint)
+            c.drawCircle(treeX + rect.width() * .10f, treeY, rect.width() * .13f, paint)
+        }
+
+        if (stage >= 3) {
+            val flowerColors = intArrayOf(Color.rgb(245, 118, 142), Color.rgb(255, 215, 94), Color.WHITE)
+            for (i in 0..2) {
+                val fx = rect.left + rect.width() * (.20f + i * .22f)
+                val fy = rect.top + rect.height() * (.78f - (i % 2) * .08f)
+                paint.color = flowerColors[i]
+                c.drawCircle(fx, fy, rect.width() * .065f, paint)
+                paint.color = Color.rgb(255, 224, 123)
+                c.drawCircle(fx, fy, rect.width() * .025f, paint)
+            }
+        }
+        paint.strokeWidth = 1f
+    }
+
     private fun drawGardensScreen(c: Canvas, w: Float, h: Float) {
         drawDim(c, w, h)
         rounded(c, RectF(w * .045f, h * .075f, w * .955f, h * .94f), 28f, Color.rgb(239, 231, 197))
@@ -202,16 +264,18 @@ class GardenGameView(context: Context) : View(context) {
             val stage = gardenStages[i]
             val card = RectF(w * .085f, top, w * .915f, bottom)
             rounded(c, card, 18f, if (unlocked) Color.rgb(255, 250, 229) else Color.rgb(210, 207, 185))
+            val scene = RectF(w * .105f, top + h * .018f, w * .275f, bottom - h * .018f)
+            drawGardenMiniature(c, i, stage, scene)
             paint.textAlign = Paint.Align.LEFT
             paint.typeface = Typeface.create("sans-serif-rounded", Typeface.BOLD)
             paint.color = Color.rgb(47, 91, 64)
-            paint.textSize = w * .036f
-            c.drawText(gardenNames[i], w * .13f, top + h * .043f, paint)
+            paint.textSize = w * .034f
+            c.drawText(gardenNames[i], w * .30f, top + h * .043f, paint)
             paint.typeface = Typeface.create("sans-serif", Typeface.NORMAL)
-            paint.textSize = w * .025f
+            paint.textSize = w * .022f
             paint.color = Color.rgb(103, 111, 87)
-            c.drawText(if (unlocked) gardenDescriptions[i] else "Conclua o jardim anterior para liberar.", w * .13f, top + h * .078f, paint)
-            val progressRect = RectF(w * .13f, top + h * .103f, w * .55f, top + h * .119f)
+            c.drawText(if (unlocked) gardenDescriptions[i] else "Conclua o jardim anterior para liberar.", w * .30f, top + h * .078f, paint)
+            val progressRect = RectF(w * .30f, top + h * .103f, w * .57f, top + h * .119f)
             rounded(c, progressRect, 8f, Color.rgb(218, 220, 195))
             if (stage > 0) {
                 val fill = RectF(progressRect.left, progressRect.top, progressRect.left + progressRect.width() * stage / 3f, progressRect.bottom)
@@ -220,7 +284,7 @@ class GardenGameView(context: Context) : View(context) {
             paint.textAlign = Paint.Align.LEFT
             paint.color = Color.rgb(85, 104, 75)
             paint.textSize = w * .023f
-            c.drawText("$stage/3 etapas", w * .13f, top + h * .145f, paint)
+            c.drawText("$stage/3 etapas", w * .30f, top + h * .145f, paint)
             val action = RectF(w * .62f, top + h * .045f, w * .87f, top + h * .112f)
             val label = when {
                 !unlocked -> "BLOQUEADO"
@@ -233,14 +297,6 @@ class GardenGameView(context: Context) : View(context) {
             paint.color = if (!unlocked || stage >= 3) Color.rgb(76, 91, 66) else Color.WHITE
             paint.textSize = w * .026f
             c.drawText(label, action.centerX(), action.centerY() + w * .009f, paint)
-            paint.textSize = w * .040f
-            paint.color = when (stage) {
-                0 -> Color.rgb(137, 116, 82)
-                1 -> Color.rgb(107, 148, 83)
-                2 -> Color.rgb(80, 157, 99)
-                else -> Color.rgb(225, 163, 57)
-            }
-            c.drawText(if (stage == 0) "♧" else if (stage == 3) "✿" else "♣", w * .77f, top + h * .14f, paint)
         }
 
         val missionTop = h * .755f
