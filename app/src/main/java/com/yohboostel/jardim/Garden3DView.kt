@@ -65,8 +65,7 @@ private class Garden3DRenderer : GLSurfaceView.Renderer {
     override fun onSurfaceCreated(gl: GL10?, config: EGLConfig?) {
         GLES20.glClearColor(0.48f, 0.76f, 0.88f, 1f)
         GLES20.glEnable(GLES20.GL_DEPTH_TEST)
-        GLES20.glEnable(GLES20.GL_CULL_FACE)
-        GLES20.glCullFace(GLES20.GL_BACK)
+        GLES20.glDisable(GLES20.GL_CULL_FACE)
         program = linkProgram(vertexShader, fragmentShader)
         sphere = makeSphere(22, 30)
         cylinder = makeCylinder(24)
@@ -139,7 +138,14 @@ private class Garden3DRenderer : GLSurfaceView.Renderer {
             sphere(x, 0.18f, z, 0.10f, 0.09f, 0.10f, 1.0f, 0.83f, 0.35f)
         }
 
-        // Sol volumétrico no horizonte.
+        // Nuvens volumétricas e sol no horizonte.
+        for (cloud in 0..3) {
+            val cx = -4.8f + cloud * 3.2f
+            val cy = 4.8f + (cloud % 2) * 0.35f
+            sphere(cx, cy, -10.5f, 1.05f, 0.30f, 0.48f, 0.94f, 0.98f, 0.98f)
+            sphere(cx - 0.55f, cy + 0.12f, -10.5f, 0.58f, 0.43f, 0.45f, 1.0f, 1.0f, 1.0f)
+            sphere(cx + 0.42f, cy + 0.10f, -10.5f, 0.67f, 0.40f, 0.48f, 0.98f, 1.0f, 1.0f)
+        }
         sphere(-4.6f, 5.2f, -9.5f, 0.72f, 0.72f, 0.72f, 1.0f, 0.86f, 0.48f)
     }
 
@@ -149,6 +155,8 @@ private class Garden3DRenderer : GLSurfaceView.Renderer {
         sphere(x, ground + size * 1.28f, z, size * 0.62f, size * 0.59f, size * 0.57f, r, g, b)
         sphere(x - size * 0.40f, ground + size * 1.12f, z + size * 0.08f, size * 0.43f, size * 0.43f, size * 0.43f, r * 0.88f, g * 0.91f, b * 0.88f)
         sphere(x + size * 0.40f, ground + size * 1.13f, z + size * 0.04f, size * 0.44f, size * 0.44f, size * 0.43f, r * 1.04f, g * 1.04f, b * 1.02f)
+        sphere(x - size * 0.26f, ground + size * 1.55f, z + size * 0.28f, size * 0.34f, size * 0.36f, size * 0.34f, r * 0.94f, g * 0.98f, b * 0.94f)
+        sphere(x + size * 0.29f, ground + size * 1.55f, z - size * 0.24f, size * 0.36f, size * 0.37f, size * 0.34f, r * 1.08f, g * 1.04f, b * 1.02f)
         sphere(x, ground + size * 1.65f, z - size * 0.02f, size * 0.40f, size * 0.42f, size * 0.40f, r * 1.08f, g * 1.07f, b * 1.03f)
     }
 
