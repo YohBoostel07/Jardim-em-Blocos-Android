@@ -277,7 +277,7 @@ class GardenGameView(context: Context) : View(context) {
         paint.textSize=w*.030f
         paint.color=Color.rgb(103,111,87)
         c.drawText("Você recebeu "+expeditionRewards[expeditionStage]+" moedas",w/2f,h*.515f,paint)
-        c.drawText("Próxima etapa: "+(expeditionUnlocked+1)+" de 5",w/2f,h*.56f,paint)
+        c.drawText(if(expeditionUnlocked>=5) "Todas as etapas foram concluídas!" else "Próxima etapa: "+(expeditionUnlocked+1)+" de 5",w/2f,h*.56f,paint)
         drawButton(c,w,h*.645f,"CONTINUAR",true)
     }
 
@@ -1112,7 +1112,7 @@ class GardenGameView(context: Context) : View(context) {
                             showExpeditions = false
                         } else {
                             val idx=((event.y/height-.205f)/.118f).toInt()
-                            if (idx in 0..4 && idx <= expeditionUnlocked) {
+                            if (idx in 0..4 && idx == expeditionUnlocked) {
                                 expeditionStage = idx
                                 activeExpedition = true
                                 showExpeditions = false
@@ -1135,7 +1135,7 @@ class GardenGameView(context: Context) : View(context) {
                         }
                     } else {
                         when {
-                            event.y in height*.64f..height*.745f -> {mainMenuOpen=false;showExpeditions=false;if(showTutorial)finishTutorial()}
+                            event.y in height*.64f..height*.745f -> {mainMenuOpen=false;showExpeditions=false;activeExpedition=false;if(showTutorial)finishTutorial()}
                             event.y in height*.75f..height*.85f && event.x<width*.36f -> {mainMenuOpen=false;showGardens=true}
                             event.y in height*.75f..height*.85f && event.x in width*.36f..width*.64f -> showExpeditions=true
                             event.y in height*.75f..height*.85f && event.x>width*.64f -> showAchievements=true
