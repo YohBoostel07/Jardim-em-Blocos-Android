@@ -75,6 +75,8 @@ class GardenGameView(context: Context) : View(context) {
     private val gardenStages = IntArray(3) { prefs.getInt("garden_stage_$it", 0).coerceIn(0, 3) }
     private var dailyLines = prefs.getInt("daily_lines", 0)
     private var dailyRewardClaimed = prefs.getBoolean("daily_reward_claimed", false)
+    private var weeklyLines = prefs.getInt("weekly_lines", 0)
+    private var weeklyRewardClaimed = prefs.getBoolean("weekly_reward_claimed", false)
     private var boardLeft = 0f
     private var boardTop = 0f
     private var cell = 0f
@@ -97,6 +99,7 @@ class GardenGameView(context: Context) : View(context) {
         isFocusable = true
         isClickable = true
         refreshDailyMission()
+        refreshWeeklyMission()
     }
 
     private fun newPiece(): Piece {
@@ -344,23 +347,40 @@ class GardenGameView(context: Context) : View(context) {
         }
 
         val missionTop = h * .755f
-        rounded(c, RectF(w * .085f, missionTop, w * .915f, h * .865f), 16f, Color.rgb(224, 239, 211))
+        rounded(c, RectF(w * .085f, missionTop, w * .915f, h * .875f), 16f, Color.rgb(224, 239, 211))
         paint.textAlign = Paint.Align.LEFT
         paint.typeface = Typeface.create("sans-serif-rounded", Typeface.BOLD)
         paint.color = Color.rgb(47, 91, 64)
-        paint.textSize = w * .030f
-        c.drawText("MISSÃO DIÁRIA", w * .13f, missionTop + h * .038f, paint)
+        paint.textSize = w * .027f
+        c.drawText("MISSÃO DIÁRIA", w * .13f, h * .785f, paint)
         paint.typeface = Typeface.create("sans-serif", Typeface.NORMAL)
-        paint.textSize = w * .025f
-        c.drawText("Limpe 5 linhas  •  $dailyLines/5", w * .13f, missionTop + h * .073f, paint)
-        val missionButton = RectF(w * .65f, missionTop + h * .022f, w * .87f, missionTop + h * .088f)
-        val canClaim = dailyLines >= 5 && !dailyRewardClaimed
-        rounded(c, missionButton, 12f, if (canClaim) Color.rgb(83, 151, 91) else Color.rgb(188, 199, 172))
+        paint.textSize = w * .023f
+        c.drawText("Limpe 5 linhas  •  $dailyLines/5", w * .13f, h * .812f, paint)
+        val dailyButton = RectF(w * .65f, h * .765f, w * .87f, h * .817f)
+        val canClaimDaily = dailyLines >= 5 && !dailyRewardClaimed
+        rounded(c, dailyButton, 11f, if (canClaimDaily) Color.rgb(83, 151, 91) else Color.rgb(188, 199, 172))
         paint.textAlign = Paint.Align.CENTER
         paint.typeface = Typeface.create("sans-serif", Typeface.BOLD)
-        paint.color = if (canClaim) Color.WHITE else Color.rgb(76, 91, 66)
-        paint.textSize = w * .024f
-        c.drawText(if (dailyRewardClaimed) "RESGATADA" else if (canClaim) "RESGATAR +100" else "100 MOEDAS", missionButton.centerX(), missionButton.centerY() + w * .008f, paint)
+        paint.color = if (canClaimDaily) Color.WHITE else Color.rgb(76, 91, 66)
+        paint.textSize = w * .021f
+        c.drawText(if (dailyRewardClaimed) "RESGATADA" else if (canClaimDaily) "+100 MOEDAS" else "100 MOEDAS", dailyButton.centerX(), dailyButton.centerY() + w * .007f, paint)
+
+        paint.textAlign = Paint.Align.LEFT
+        paint.typeface = Typeface.create("sans-serif-rounded", Typeface.BOLD)
+        paint.color = Color.rgb(47, 91, 64)
+        paint.textSize = w * .027f
+        c.drawText("MISSÃO SEMANAL", w * .13f, h * .842f, paint)
+        paint.typeface = Typeface.create("sans-serif", Typeface.NORMAL)
+        paint.textSize = w * .023f
+        c.drawText("Limpe 20 linhas  •  $weeklyLines/20", w * .13f, h * .868f, paint)
+        val weeklyButton = RectF(w * .65f, h * .825f, w * .87f, h * .877f)
+        val canClaimWeekly = weeklyLines >= 20 && !weeklyRewardClaimed
+        rounded(c, weeklyButton, 11f, if (canClaimWeekly) Color.rgb(83, 151, 91) else Color.rgb(188, 199, 172))
+        paint.textAlign = Paint.Align.CENTER
+        paint.typeface = Typeface.create("sans-serif", Typeface.BOLD)
+        paint.color = if (canClaimWeekly) Color.WHITE else Color.rgb(76, 91, 66)
+        paint.textSize = w * .021f
+        c.drawText(if (weeklyRewardClaimed) "RESGATADA" else if (canClaimWeekly) "+250 MOEDAS" else "250 MOEDAS", weeklyButton.centerX(), weeklyButton.centerY() + w * .007f, paint)
 
         val back = RectF(w * .25f, h * .885f, w * .75f, h * .925f)
         rounded(c, back, 14f, Color.rgb(71, 145, 91))
@@ -380,10 +400,23 @@ class GardenGameView(context: Context) : View(context) {
         }
     }
 
+    private fun refreshWeeklyMission() {
+        val week = SimpleDateFormat("YYYYww", Locale.US).format(Date())
+        val savedWeek = prefs.getString("weekly_mission_week", "")
+        if (savedWeek != week) {
+            weeklyLines = 0
+            weeklyRewardClaimed = false
+            prefs.edit().putString("weekly_mission_week", week)
+                .putInt("weekly_lines", 0).putBoolean("weekly_reward_claimed", false).apply()
+        }
+    }
+
     private fun saveGardenProgress() {
         val editor = prefs.edit().putInt("garden_coins", coins)
             .putInt("daily_lines", dailyLines)
             .putBoolean("daily_reward_claimed", dailyRewardClaimed)
+            .putInt("weekly_lines", weeklyLines)
+            .putBoolean("weekly_reward_claimed", weeklyRewardClaimed)
         for (i in 0..2) editor.putInt("garden_stage_$i", gardenStages[i])
         editor.apply()
     }
@@ -647,6 +680,8 @@ class GardenGameView(context: Context) : View(context) {
             coins += lines * 25
             refreshDailyMission()
             dailyLines += lines
+            refreshWeeklyMission()
+            weeklyLines += lines
             saveGardenProgress()
             clearedCells.forEach { (r, c) ->
                 sparks = sparks + Spark(boardLeft + (c + .5f) * cell,
@@ -806,11 +841,17 @@ class GardenGameView(context: Context) : View(context) {
                     } else {
                         when {
                             event.y in height * .875f..height * .94f -> showGardens = false
-                            event.y in height * .755f..height * .865f && event.x > width * .62f && dailyLines >= 5 && !dailyRewardClaimed -> {
+                            event.y in height * .755f..height * .82f && event.x > width * .62f && dailyLines >= 5 && !dailyRewardClaimed -> {
                                 dailyRewardClaimed = true
                                 coins += 100
                                 saveGardenProgress()
                                 playTone(ToneGenerator.TONE_PROP_ACK, 150)
+                            }
+                            event.y in height * .82f..height * .88f && event.x > width * .62f && weeklyLines >= 20 && !weeklyRewardClaimed -> {
+                                weeklyRewardClaimed = true
+                                coins += 250
+                                saveGardenProgress()
+                                playTone(ToneGenerator.TONE_PROP_ACK, 180)
                             }
                             event.y in height * .225f..height * .38f -> { selectedGarden = 0; if (event.x < width * .58f) gardenDetailOpen = true else restoreGarden(0) }
                             event.y in height * .399f..height * .554f -> { selectedGarden = 1; if (event.x < width * .58f) gardenDetailOpen = true else restoreGarden(1) }
