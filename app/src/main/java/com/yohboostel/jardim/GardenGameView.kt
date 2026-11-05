@@ -65,6 +65,8 @@ class GardenGameView(context: Context) : View(context) {
     private var gamesPlayed = prefs.getInt("games_played", 0)
     private var totalLines = prefs.getInt("total_lines", 0)
     private var bestCombo = prefs.getInt("best_combo", 0)
+    private var mainMenuOpen = true
+    private var showAchievements = false
     private var showGardens = false
     private var gardenDetailOpen = false
     private var selectedGarden = 0
@@ -125,6 +127,10 @@ class GardenGameView(context: Context) : View(context) {
         canvas.drawRect(0f, 0f, w, h, paint)
         paint.shader = null
         drawGardenBackdrop(canvas, w, h)
+        if (mainMenuOpen) {
+            if (showAchievements) drawAchievementsScreen(canvas, w, h) else drawMainMenu(canvas, w, h)
+            return
+        }
         boardSize = min(w * .90f, h * .455f)
         cell = boardSize / 9f
         boardLeft = (w - boardSize) / 2f
@@ -144,6 +150,63 @@ class GardenGameView(context: Context) : View(context) {
         else if (confirmRestart) drawRestartConfirmation(canvas, w, h)
         else if (paused) drawPauseMenu(canvas, w, h)
         else if (gameOver) drawGameOver(canvas, w, h)
+    }
+
+    private fun drawMainMenu(c: Canvas, w: Float, h: Float) {
+        paint.shader = LinearGradient(0f, 0f, 0f, h, intArrayOf(Color.rgb(17,55,48), Color.rgb(31,105,72), Color.rgb(112,157,91)), null, Shader.TileMode.CLAMP)
+        c.drawRect(0f,0f,w,h,paint); paint.shader = null
+        drawGardenBackdrop(c,w,h)
+        paint.textAlign = Paint.Align.CENTER
+        paint.typeface = Typeface.create("sans-serif-rounded",Typeface.BOLD)
+        paint.color = Color.WHITE; paint.textSize = w*.085f
+        c.drawText("Jardim em",w/2f,h*.105f,paint); c.drawText("Blocos",w/2f,h*.19f,paint)
+        paint.textSize=w*.029f; paint.color=Color.rgb(231,245,216); paint.typeface=Typeface.create("sans-serif",Typeface.BOLD)
+        c.drawText("UM MUNDO PARA CULTIVAR",w/2f,h*.225f,paint)
+        val hero=RectF(w*.12f,h*.275f,w*.88f,h*.565f); drawGardenMiniature(c,0,gardenStages[0],hero)
+        paint.color=Color.argb(45,13,46,31); c.drawRoundRect(hero,22f,22f,paint)
+        paint.textSize=w*.028f; paint.color=Color.WHITE
+        c.drawText("Recupere jardins e descubra novos lugares",w/2f,h*.60f,paint)
+        val play=RectF(w*.15f,h*.65f,w*.85f,h*.735f); rounded(c,play,22f,Color.rgb(255,205,91))
+        paint.color=Color.rgb(57,82,48); paint.textSize=w*.043f; paint.typeface=Typeface.create("sans-serif-rounded",Typeface.BOLD)
+        c.drawText("JOGAR",play.centerX(),play.centerY()+w*.015f,paint)
+        val gardens=RectF(w*.15f,h*.755f,w*.47f,h*.835f); val achievements=RectF(w*.53f,h*.755f,w*.85f,h*.835f)
+        rounded(c,gardens,18f,Color.rgb(239,231,197)); rounded(c,achievements,18f,Color.rgb(239,231,197))
+        paint.color=Color.rgb(47,91,64); paint.textSize=w*.027f
+        c.drawText("MEUS JARDINS",gardens.centerX(),gardens.centerY()+w*.01f,paint)
+        c.drawText("CONQUISTAS",achievements.centerX(),achievements.centerY()+w*.01f,paint)
+        paint.color=Color.rgb(255,232,166); paint.textSize=w*.031f
+        c.drawText("✦  $coins moedas",w/2f,h*.895f,paint)
+        paint.color=Color.argb(210,255,255,255); paint.textSize=w*.023f; paint.typeface=Typeface.create("sans-serif",Typeface.NORMAL)
+        c.drawText("RECORDE  $best     •     NÍVEL " + (1+best/500),w/2f,h*.935f,paint)
+    }
+
+    private fun drawAchievementsScreen(c: Canvas, w: Float, h: Float) {
+        drawDim(c,w,h); rounded(c,RectF(w*.055f,h*.07f,w*.945f,h*.93f),26f,Color.rgb(239,231,197))
+        paint.textAlign=Paint.Align.CENTER; paint.typeface=Typeface.create("sans-serif-rounded",Typeface.BOLD)
+        paint.color=Color.rgb(47,91,64); paint.textSize=w*.055f; c.drawText("Conquistas",w/2f,h*.145f,paint)
+        paint.textSize=w*.026f; paint.typeface=Typeface.create("sans-serif",Typeface.NORMAL); paint.color=Color.rgb(103,111,87)
+        c.drawText("Complete desafios e ganhe moedas",w/2f,h*.185f,paint)
+        val titles=listOf("Primeira partida","Jardineiro dedicado","Pontuação de ouro","Combo espetacular")
+        val details=listOf("Jogue sua primeira partida","Limpe 10 linhas no total","Alcance 500 pontos","Limpe 3 linhas de uma vez")
+        val unlocked=listOf(gamesPlayed>=1,totalLines>=10,best>=500,bestCombo>=3)
+        val keys=listOf("ach_first","ach_lines","ach_score","ach_combo"); val rewards=intArrayOf(50,75,100,100)
+        for(i in 0..3) {
+            val top=h*(.235f+i*.137f); val card=RectF(w*.10f,top,w*.90f,top+h*.115f)
+            rounded(c,card,15f,if(unlocked[i]) Color.rgb(255,250,229) else Color.rgb(218,216,196))
+            paint.color=if(unlocked[i]) Color.rgb(225,170,67) else Color.rgb(153,157,139); c.drawCircle(w*.19f,top+h*.057f,w*.045f,paint)
+            paint.color=Color.WHITE; paint.textSize=w*.04f; c.drawText(if(unlocked[i]) "★" else "·",w*.19f,top+h*.071f,paint)
+            paint.textAlign=Paint.Align.LEFT; paint.typeface=Typeface.create("sans-serif-rounded",Typeface.BOLD)
+            paint.color=Color.rgb(47,91,64); paint.textSize=w*.030f; c.drawText(titles[i],w*.27f,top+h*.045f,paint)
+            paint.typeface=Typeface.create("sans-serif",Typeface.NORMAL); paint.textSize=w*.022f; paint.color=Color.rgb(103,111,87)
+            c.drawText(details[i],w*.27f,top+h*.078f,paint)
+            val claimed=prefs.getBoolean(keys[i],false); val reward=RectF(w*.68f,top+h*.027f,w*.87f,top+h*.088f)
+            rounded(c,reward,10f,if(unlocked[i]&&!claimed) Color.rgb(83,151,91) else Color.rgb(188,199,172))
+            paint.textAlign=Paint.Align.CENTER; paint.typeface=Typeface.create("sans-serif",Typeface.BOLD)
+            paint.color=if(unlocked[i]&&!claimed) Color.WHITE else Color.rgb(76,91,66); paint.textSize=w*.021f
+            c.drawText(if(claimed) "RESGATADA" else if(unlocked[i]) "+"+rewards[i] else "BLOQUEADA",reward.centerX(),reward.centerY()+w*.007f,paint)
+        }
+        val back=RectF(w*.22f,h*.82f,w*.78f,h*.89f); rounded(c,back,16f,Color.rgb(71,145,91))
+        paint.color=Color.WHITE; paint.textSize=w*.029f; c.drawText("VOLTAR AO MENU",back.centerX(),back.centerY()+w*.01f,paint)
     }
 
     private fun drawGardenBackdrop(c: Canvas, w: Float, h: Float) {
@@ -581,7 +644,7 @@ class GardenGameView(context: Context) : View(context) {
 
     private fun drawPauseMenu(c: Canvas, w: Float, h: Float) {
         drawDim(c, w, h)
-        drawPanel(c, w, h * .27f, h * .73f)
+        drawPanel(c, w, h * .25f, h * .77f)
         paint.textAlign = Paint.Align.CENTER
         paint.typeface = Typeface.create("sans-serif-rounded", Typeface.BOLD)
         paint.color = Color.rgb(47, 91, 64)
@@ -593,7 +656,8 @@ class GardenGameView(context: Context) : View(context) {
         c.drawText("Melhor combo: $bestCombo linhas", w / 2f, h * .445f, paint)
         drawButton(c, w, h * .505f, "CONTINUAR", true)
         drawButton(c, w, h * .585f, if (soundEnabled) "SOM: LIGADO" else "SOM: DESLIGADO", false)
-        drawButton(c, w, h * .665f, "REINICIAR PARTIDA", false)
+        drawButton(c, w, h * .635f, "REINICIAR PARTIDA", false)
+        drawButton(c, w, h * .715f, "MENU PRINCIPAL", false)
     }
 
     private fun drawRestartConfirmation(c: Canvas, w: Float, h: Float) {
@@ -798,7 +862,7 @@ class GardenGameView(context: Context) : View(context) {
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
         if (event.action == MotionEvent.ACTION_DOWN) {
-            if (showTutorial || paused || gameOver || confirmRestart || showGardens) return true
+            if (mainMenuOpen || showTutorial || paused || gameOver || confirmRestart || showGardens) return true
             if (event.y < height * .22f && event.x > width * .82f) return true
             if (event.y > trayCenterY - height * .06f && event.y < trayCenterY + height * .06f) {
                 choosePieceAt(event.x)
@@ -825,6 +889,27 @@ class GardenGameView(context: Context) : View(context) {
                 return true
             }
             MotionEvent.ACTION_UP -> {
+                if (mainMenuOpen) {
+                    if (showAchievements) {
+                        if (event.y > height*.80f) showAchievements=false
+                        else {
+                            val idx=((event.y/height-.235f)/.137f).toInt()
+                            if(idx in 0..3) {
+                                val unlocked=when(idx){0->gamesPlayed>=1;1->totalLines>=10;2->best>=500;else->bestCombo>=3}
+                                val key=listOf("ach_first","ach_lines","ach_score","ach_combo")[idx]
+                                val reward=intArrayOf(50,75,100,100)[idx]
+                                if(unlocked&&!prefs.getBoolean(key,false)){coins+=reward;prefs.edit().putBoolean(key,true).apply();saveGardenProgress();playTone(ToneGenerator.TONE_PROP_ACK,160)}
+                            }
+                        }
+                    } else {
+                        when {
+                            event.y in height*.64f..height*.745f -> {mainMenuOpen=false;if(showTutorial)finishTutorial()}
+                            event.y in height*.75f..height*.85f && event.x<width*.50f -> {mainMenuOpen=false;showGardens=true}
+                            event.y in height*.75f..height*.85f && event.x>=width*.50f -> showAchievements=true
+                        }
+                    }
+                    invalidate(); return true
+                }
                 if (showTutorial) {
                     finishTutorial()
                     return true
@@ -877,7 +962,8 @@ class GardenGameView(context: Context) : View(context) {
                             soundEnabled = !soundEnabled
                             prefs.edit().putBoolean("sound_enabled", soundEnabled).apply()
                         }
-                        event.y in height * .63f..height * .70f -> confirmRestart = true
+                        event.y in height * .61f..height * .68f -> confirmRestart = true
+                        event.y in height * .69f..height * .76f -> { paused = false; mainMenuOpen = true }
                     }
                     invalidate()
                     return true
