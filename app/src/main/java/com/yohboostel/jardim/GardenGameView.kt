@@ -189,7 +189,8 @@ class GardenGameView(context: Context) : View(context) {
         // Grande vitrine do mundo restaurável.
         val hero=RectF(w*.075f,h*.285f,w*.925f,h*.565f)
         paint.color=Color.argb(100,0,0,0);c.drawRoundRect(RectF(hero.left,hero.top+h*.012f,hero.right,hero.bottom+h*.012f),28f,28f,paint)
-        drawPremiumCard(c,hero,28f,Color.rgb(137,191,167),Color.rgb(34,103,70))
+        paint.color=Color.argb(105,12,53,43);c.drawRoundRect(hero,28f,28f,paint)
+        paint.style=Paint.Style.STROKE;paint.strokeWidth=3f;paint.color=Color.argb(190,255,238,178);c.drawRoundRect(hero,28f,28f,paint);paint.style=Paint.Style.FILL
         paint.shader=LinearGradient(0f,hero.centerY(),0f,hero.bottom,
             intArrayOf(Color.TRANSPARENT,Color.argb(220,5,35,30)),null,Shader.TileMode.CLAMP)
         c.drawRoundRect(hero,28f,28f,paint);paint.shader=null
