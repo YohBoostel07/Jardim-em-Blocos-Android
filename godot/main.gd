@@ -60,6 +60,12 @@ func _mat(color: Color, roughness := 0.72, metallic := 0.0) -> StandardMaterial3
 	material.metallic = metallic
 	return material
 
+func _flat_mat(color: Color) -> StandardMaterial3D:
+	var material := StandardMaterial3D.new()
+	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	material.albedo_color = color
+	return material
+
 func _box(parent: Node3D, size: Vector3, pos: Vector3, material: Material, bevel := false) -> MeshInstance3D:
 	var mesh_instance := MeshInstance3D.new()
 	var mesh := BoxMesh.new()
@@ -77,8 +83,8 @@ func _create_world() -> void:
 	environment.background_color = Color("#8bd7ed")
 	environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	environment.ambient_light_color = Color("#fff4d8")
-	environment.ambient_light_energy = 0.72
-	environment.tonemap_mode = Environment.TONE_MAPPER_FILMIC
+	environment.ambient_light_energy = 0.42
+	environment.tonemap_mode = Environment.TONE_MAPPER_LINEAR
 	world.environment = environment
 	add_child(world)
 
@@ -94,7 +100,7 @@ func _create_world() -> void:
 
 	var sun := DirectionalLight3D.new()
 	sun.rotation_degrees = Vector3(-48, -32, 0)
-	sun.light_energy = 1.35
+	sun.light_energy = 0.9
 	sun.shadow_enabled = true
 	add_child(sun)
 
@@ -220,7 +226,7 @@ func _create_board() -> void:
 	var base_mesh := BoxMesh.new()
 	base_mesh.size = Vector3(BOARD_SIZE + 0.35, 0.26, BOARD_SIZE + 0.35)
 	board_base.mesh = base_mesh
-	board_base.material_override = _mat(Color("#4f9d66"))
+	board_base.material_override = _flat_mat(Color("#347b4b"))
 	board_base.position = Vector3(0, 0.22, 0)
 	add_child(board_base)
 	for r in range(GRID):
@@ -229,7 +235,7 @@ func _create_board() -> void:
 			var mesh := BoxMesh.new()
 			mesh.size = Vector3(CELL * 0.91, 0.10, CELL * 0.91)
 			cell.mesh = mesh
-			cell.material_override = _mat(Color("#d9efbd") if (r + c) % 2 == 0 else Color("#c9e5a9"))
+			cell.material_override = _flat_mat(Color("#d7e9b5") if (r + c) % 2 == 0 else Color("#c5df9d"))
 			cell.position = _cell_position(r, c, 0.40)
 			add_child(cell)
 
@@ -239,17 +245,17 @@ func _cell_position(row: int, col: int, y: float) -> Vector3:
 func _create_block(row: int, col: int, color_index: int) -> MeshInstance3D:
 	var block := MeshInstance3D.new()
 	var mesh := BoxMesh.new()
-	mesh.size = Vector3(CELL * 0.88, 0.42, CELL * 0.88)
+	mesh.size = Vector3(CELL * 0.88, 0.48, CELL * 0.88)
 	block.mesh = mesh
-	block.material_override = _mat(BLOCK_COLORS[color_index % BLOCK_COLORS.size()], 0.30, 0.04)
-	block.position = _cell_position(row, col, 0.68)
+	block.material_override = _flat_mat(BLOCK_COLORS[color_index % BLOCK_COLORS.size()])
+	block.position = _cell_position(row, col, 0.72)
 	add_child(block)
 	var shine := MeshInstance3D.new()
 	var shine_mesh := BoxMesh.new()
 	shine_mesh.size = Vector3(CELL * 0.54, 0.025, CELL * 0.12)
 	shine.mesh = shine_mesh
-	shine.material_override = _mat(Color(1, 1, 1, 0.42), 0.22)
-	shine.position = Vector3(0, 0.215, -CELL * 0.29)
+	shine.material_override = _flat_mat(Color(1, 1, 1, 0.72))
+	shine.position = Vector3(0, 0.245, -CELL * 0.29)
 	block.add_child(shine)
 	return block
 
