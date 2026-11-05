@@ -232,79 +232,84 @@ class GardenGameView(context: Context) : View(context) {
     }
 
     private fun drawAchievementsScreen(c: Canvas,w: Float,h: Float){
-        drawDim(c,w,h);rounded(c,RectF(w*.045f,h*.045f,w*.955f,h*.955f),28f,Color.rgb(239,231,197));paint.textAlign=Paint.Align.CENTER
-        paint.typeface=Typeface.create("sans-serif-rounded",Typeface.BOLD);paint.color=Color.rgb(47,91,64);paint.textSize=w*.055f;c.drawText("Galeria de conquistas",w/2f,h*.115f,paint)
-        paint.textSize=w*.025f;paint.typeface=Typeface.create("sans-serif",Typeface.NORMAL);paint.color=Color.rgb(103,111,87);c.drawText("Desafios permanentes que rendem moedas",w/2f,h*.155f,paint)
+        drawDim(c,w,h)
+        drawPremiumCard(c,RectF(w*.045f,h*.045f,w*.955f,h*.955f),30f,Color.rgb(247,239,207),Color.rgb(207,220,181))
+        paint.textAlign=Paint.Align.CENTER;paint.typeface=Typeface.create("serif",Typeface.BOLD)
+        paint.color=Color.rgb(48,91,65);paint.textSize=w*.056f
+        c.drawText("SALÃO DAS CONQUISTAS",w*.5f,h*.115f,paint)
+        paint.typeface=Typeface.create("sans-serif",Typeface.NORMAL);paint.textSize=w*.023f
+        paint.color=Color.rgb(110,119,87);c.drawText("Desafios especiais • recompensas em moedas",w*.5f,h*.155f,paint)
         val titles=listOf("Primeira partida","Jardineiro dedicado","Pontuação de ouro","Combo espetacular","Mestre das linhas","Mundo florescido")
         val details=listOf("Jogue sua primeira partida","Limpe 10 linhas no total","Alcance 500 pontos","Limpe 3 linhas de uma vez","Limpe 50 linhas no total","Restaure 3 etapas de jardins")
         val unlocked=listOf(gamesPlayed>=1,totalLines>=10,best>=500,bestCombo>=3,totalLines>=50,gardenStages.sum()>=3)
-        val keys=listOf("ach_first","ach_lines","ach_score","ach_combo","ach_master_lines","ach_world");val rewards=intArrayOf(50,75,100,100,150,200)
-        for(i in 0..5){val top=h*(.195f+i*.102f);rounded(c,RectF(w*.085f,top,w*.915f,top+h*.087f),14f,if(unlocked[i])Color.rgb(255,250,229)else Color.rgb(218,216,196))
-            paint.color=if(unlocked[i])Color.rgb(225,170,67)else Color.rgb(153,157,139);c.drawCircle(w*.16f,top+h*.043f,w*.034f,paint);paint.color=Color.WHITE;paint.textSize=w*.035f;c.drawText(if(unlocked[i])"★"else"·",w*.16f,top+h*.055f,paint)
-            paint.textAlign=Paint.Align.LEFT;paint.typeface=Typeface.create("sans-serif-rounded",Typeface.BOLD);paint.color=Color.rgb(47,91,64);paint.textSize=w*.027f;c.drawText(titles[i],w*.23f,top+h*.036f,paint)
-            paint.typeface=Typeface.create("sans-serif",Typeface.NORMAL);paint.textSize=w*.020f;paint.color=Color.rgb(103,111,87);c.drawText(details[i],w*.23f,top+h*.065f,paint)
-            val claimed=prefs.getBoolean(keys[i],false);val rr=RectF(w*.70f,top+h*.018f,w*.88f,top+h*.071f);rounded(c,rr,9f,if(unlocked[i]&&!claimed)Color.rgb(83,151,91)else Color.rgb(188,199,172))
-            paint.textAlign=Paint.Align.CENTER;paint.typeface=Typeface.create("sans-serif",Typeface.BOLD);paint.color=if(unlocked[i]&&!claimed)Color.WHITE else Color.rgb(76,91,66);paint.textSize=w*.019f;c.drawText(if(claimed)"RESGATADA"else if(unlocked[i])"+"+rewards[i]else"BLOQUEADA",rr.centerX(),rr.centerY()+w*.006f,paint)
+        val keys=listOf("ach_first","ach_lines","ach_score","ach_combo","ach_master_lines","ach_world")
+        val rewards=intArrayOf(50,75,100,100,150,200)
+        for(i in 0..5){
+            val top=h*(.195f+i*.102f);val rect=RectF(w*.085f,top,w*.915f,top+h*.087f)
+            drawPremiumCard(c,rect,15f,if(unlocked[i])Color.rgb(255,252,232)else Color.rgb(220,219,193),if(unlocked[i])Color.rgb(231,239,207)else Color.rgb(198,204,176))
+            paint.color=if(unlocked[i])Color.rgb(220,166,63)else Color.rgb(148,157,132)
+            c.drawCircle(w*.16f,top+h*.043f,w*.034f,paint)
+            paint.color=Color.WHITE;paint.textSize=w*.035f
+            c.drawText(if(unlocked[i])"★"else"·",w*.16f,top+h*.055f,paint)
+            paint.textAlign=Paint.Align.LEFT;paint.typeface=Typeface.create("sans-serif-condensed",Typeface.BOLD)
+            paint.color=Color.rgb(47,91,64);paint.textSize=w*.027f;c.drawText(titles[i],w*.23f,top+h*.036f,paint)
+            paint.typeface=Typeface.create("sans-serif",Typeface.NORMAL);paint.textSize=w*.019f
+            paint.color=Color.rgb(103,111,87);c.drawText(details[i],w*.23f,top+h*.065f,paint)
+            val claimed=prefs.getBoolean(keys[i],false)
+            val rr=RectF(w*.70f,top+h*.018f,w*.88f,top+h*.071f)
+            drawPremiumCard(c,rr,10f,if(unlocked[i]&&!claimed)Color.rgb(105,174,105)else Color.rgb(181,193,164),if(unlocked[i]&&!claimed)Color.rgb(49,124,72)else Color.rgb(145,160,132))
+            paint.textAlign=Paint.Align.CENTER;paint.typeface=Typeface.create("sans-serif",Typeface.BOLD)
+            paint.color=Color.WHITE;paint.textSize=w*.018f
+            c.drawText(if(claimed)"RESGATADA"else if(unlocked[i])"+"+rewards[i]+" ✦"else"BLOQUEADA",rr.centerX(),rr.centerY()+w*.006f,paint)
         }
-        val back=RectF(w*.22f,h*.84f,w*.78f,h*.91f);rounded(c,back,16f,Color.rgb(71,145,91));paint.color=Color.WHITE;paint.textSize=w*.028f;c.drawText("VOLTAR AO MENU",back.centerX(),back.centerY()+w*.01f,paint)
+        val back=RectF(w*.22f,h*.84f,w*.78f,h*.91f)
+        drawPremiumCard(c,back,17f,Color.rgb(72,151,94),Color.rgb(34,103,67))
+        paint.color=Color.WHITE;paint.textSize=w*.028f;c.drawText("VOLTAR AO MENU",back.centerX(),back.centerY()+w*.01f,paint)
     }
+
     private fun drawExpeditionsScreen(c: Canvas, w: Float, h: Float) {
-        drawDim(c, w, h)
-        rounded(c, RectF(w*.045f,h*.055f,w*.955f,h*.945f), 28f, Color.rgb(239,231,197))
-        paint.textAlign = Paint.Align.CENTER
-        paint.typeface = Typeface.create("sans-serif-rounded", Typeface.BOLD)
-        paint.color = Color.rgb(47,91,64)
-        paint.textSize = w*.058f
-        c.drawText("Expedição dos Jardins", w/2f, h*.125f, paint)
-        paint.typeface = Typeface.create("sans-serif", Typeface.NORMAL)
-        paint.textSize = w*.025f
-        paint.color = Color.rgb(103,111,87)
-        c.drawText("Supere metas de pontuação para avançar", w/2f, h*.165f, paint)
-        for (i in 0..4) {
-            val top = h*(.205f+i*.118f)
-            val unlocked = i <= expeditionUnlocked
-            val completed = i < expeditionUnlocked
-            rounded(c, RectF(w*.085f,top,w*.915f,top+h*.102f), 15f,
-                if (completed) Color.rgb(220,239,207) else if (unlocked) Color.rgb(255,250,229) else Color.rgb(215,215,195))
-            paint.textAlign = Paint.Align.LEFT
-            paint.typeface = Typeface.create("sans-serif-rounded", Typeface.BOLD)
-            paint.color = if (unlocked) Color.rgb(47,91,64) else Color.rgb(130,133,116)
-            paint.textSize = w*.027f
-            c.drawText("ETAPA "+(i+1)+"  •  "+expeditionNames[i], w*.13f, top+h*.039f, paint)
-            paint.typeface = Typeface.create("sans-serif", Typeface.NORMAL)
-            paint.textSize = w*.021f
-            paint.color = Color.rgb(103,111,87)
-            c.drawText("Alcance "+expeditionGoals[i]+" pontos em uma partida", w*.13f, top+h*.073f, paint)
-            val reward = if (completed) "CONCLUÍDA" else if (unlocked) "+"+expeditionRewards[i]+" ✦" else "BLOQUEADA"
-            paint.textAlign = Paint.Align.RIGHT
-            paint.typeface = Typeface.create("sans-serif", Typeface.BOLD)
-            paint.textSize = w*.021f
-            paint.color = if (completed) Color.rgb(65,135,79) else if (unlocked) Color.rgb(174,116,43) else Color.rgb(130,133,116)
-            c.drawText(reward, w*.88f, top+h*.055f, paint)
+        drawDim(c,w,h)
+        drawPremiumCard(c,RectF(w*.045f,h*.055f,w*.955f,h*.945f),30f,Color.rgb(247,239,207),Color.rgb(205,220,180))
+        paint.textAlign=Paint.Align.CENTER;paint.typeface=Typeface.create("serif",Typeface.BOLD)
+        paint.color=Color.rgb(47,91,64);paint.textSize=w*.056f
+        c.drawText("A GRANDE EXPEDIÇÃO",w*.5f,h*.125f,paint)
+        paint.typeface=Typeface.create("sans-serif",Typeface.NORMAL);paint.textSize=w*.023f
+        paint.color=Color.rgb(103,111,87);c.drawText("Cinco jornadas para restaurar o reino",w*.5f,h*.165f,paint)
+        for(i in 0..4){
+            val top=h*(.205f+i*.118f);val unlocked=i<=expeditionUnlocked;val completed=i<expeditionUnlocked
+            val rect=RectF(w*.085f,top,w*.915f,top+h*.102f)
+            drawPremiumCard(c,rect,16f,if(completed)Color.rgb(226,241,207)else if(unlocked)Color.rgb(255,251,228)else Color.rgb(218,218,192),if(completed)Color.rgb(190,220,165)else if(unlocked)Color.rgb(233,232,199)else Color.rgb(193,201,176))
+            paint.color=if(completed)Color.rgb(80,151,88)else if(unlocked)Color.rgb(217,165,66)else Color.rgb(144,151,128)
+            c.drawCircle(w*.145f,top+h*.051f,w*.031f,paint)
+            paint.color=Color.WHITE;paint.textSize=w*.026f
+            c.drawText(if(completed)"✓"else(i+1).toString(),w*.145f,top+h*.060f,paint)
+            paint.textAlign=Paint.Align.LEFT;paint.typeface=Typeface.create("sans-serif-condensed",Typeface.BOLD)
+            paint.color=if(unlocked)Color.rgb(47,91,64)else Color.rgb(130,133,116);paint.textSize=w*.027f
+            c.drawText(expeditionNames[i],w*.21f,top+h*.040f,paint)
+            paint.typeface=Typeface.create("sans-serif",Typeface.NORMAL);paint.textSize=w*.020f;paint.color=Color.rgb(103,111,87)
+            c.drawText("Meta: "+expeditionGoals[i]+" pontos",w*.21f,top+h*.073f,paint)
+            paint.textAlign=Paint.Align.RIGHT;paint.typeface=Typeface.create("sans-serif",Typeface.BOLD);paint.textSize=w*.020f
+            paint.color=if(completed)Color.rgb(65,135,79)else if(unlocked)Color.rgb(174,116,43)else Color.rgb(130,133,116)
+            c.drawText(if(completed)"CONCLUÍDA"else if(unlocked)"+"+expeditionRewards[i]+" ✦"else"🔒",w*.88f,top+h*.056f,paint)
         }
-        rounded(c, RectF(w*.22f,h*.825f,w*.78f,h*.90f), 16f, Color.rgb(71,145,91))
-        paint.textAlign = Paint.Align.CENTER
-        paint.color = Color.WHITE
-        paint.textSize = w*.029f
-        c.drawText("VOLTAR AO MENU", w*.5f, h*.87f, paint)
+        val back=RectF(w*.22f,h*.825f,w*.78f,h*.90f)
+        drawPremiumCard(c,back,17f,Color.rgb(72,151,94),Color.rgb(34,103,67))
+        paint.textAlign=Paint.Align.CENTER;paint.color=Color.WHITE;paint.textSize=w*.029f
+        c.drawText("VOLTAR AO MENU",w*.5f,h*.87f,paint)
     }
 
     private fun drawExpeditionCompleteScreen(c: Canvas, w: Float, h: Float) {
         drawDim(c,w,h)
-        drawPanel(c,w,h*.30f,h*.72f)
-        paint.textAlign=Paint.Align.CENTER
-        paint.typeface=Typeface.create("sans-serif-rounded",Typeface.BOLD)
-        paint.color=Color.rgb(47,91,64)
-        paint.textSize=w*.060f
-        c.drawText("ETAPA CONCLUÍDA!",w/2f,h*.405f,paint)
-        paint.textSize=w*.034f
-        paint.color=Color.rgb(174,116,43)
-        c.drawText(expeditionNames[expeditionStage],w/2f,h*.465f,paint)
-        paint.typeface=Typeface.create("sans-serif",Typeface.NORMAL)
-        paint.textSize=w*.030f
-        paint.color=Color.rgb(103,111,87)
-        c.drawText("Você recebeu "+expeditionRewards[expeditionStage]+" moedas",w/2f,h*.515f,paint)
-        c.drawText(if(expeditionUnlocked>=5) "Todas as etapas foram concluídas!" else "Próxima etapa: "+(expeditionUnlocked+1)+" de 5",w/2f,h*.56f,paint)
+        drawPremiumCard(c,RectF(w*.075f,h*.30f,w*.925f,h*.72f),30f,Color.rgb(255,239,174),Color.rgb(201,220,167))
+        paint.textAlign=Paint.Align.CENTER;paint.typeface=Typeface.create("serif",Typeface.BOLD)
+        paint.color=Color.rgb(57,105,66);paint.textSize=w*.060f
+        c.drawText("✦  ETAPA CONCLUÍDA!  ✦",w*.5f,h*.405f,paint)
+        paint.textSize=w*.034f;paint.color=Color.rgb(165,111,43)
+        c.drawText(expeditionNames[expeditionStage],w*.5f,h*.465f,paint)
+        paint.typeface=Typeface.create("sans-serif",Typeface.NORMAL);paint.textSize=w*.030f
+        paint.color=Color.rgb(89,111,76)
+        c.drawText("Você recebeu "+expeditionRewards[expeditionStage]+" moedas",w*.5f,h*.515f,paint)
+        c.drawText(if(expeditionUnlocked>=5)"O reino está totalmente restaurado!"else"Próxima jornada: "+(expeditionUnlocked+1)+" de 5",w*.5f,h*.56f,paint)
         drawButton(c,w,h*.645f,"CONTINUAR",true)
     }
 
@@ -408,45 +413,38 @@ class GardenGameView(context: Context) : View(context) {
         paint.strokeWidth=1f
     }
     private fun drawGardenDetailScreen(c: Canvas, w: Float, h: Float) {
-        drawDim(c, w, h)
-        rounded(c, RectF(w * .045f, h * .055f, w * .955f, h * .945f), 28f, Color.rgb(239, 231, 197))
-        val index = selectedGarden.coerceIn(0, 2)
-        val stage = gardenStages[index]
-        val unlocked = index == 0 || gardenStages[index - 1] >= 3
-        paint.textAlign = Paint.Align.CENTER
-        paint.typeface = Typeface.create("sans-serif-rounded", Typeface.BOLD)
-        paint.color = Color.rgb(47, 91, 64)
-        paint.textSize = w * .052f
-        c.drawText(gardenNames[index], w / 2f, h * .125f, paint)
-        paint.textSize = w * .027f
-        paint.color = Color.rgb(174, 116, 43)
-        c.drawText("MOEDAS " + coins, w / 2f, h * .17f, paint)
-        val scene = RectF(w * .10f, h * .205f, w * .90f, h * .57f)
-        drawGardenMiniature(c, index, stage, scene)
-        paint.textSize = w * .034f
-        paint.color = Color.rgb(47, 91, 64)
-        c.drawText("ETAPA " + stage + " DE 3", w / 2f, h * .625f, paint)
-        paint.typeface = Typeface.create("sans-serif", Typeface.NORMAL)
-        paint.textSize = w * .027f
-        paint.color = Color.rgb(103, 111, 87)
-        c.drawText(gardenDescriptions[index], w / 2f, h * .67f, paint)
-        val progress = RectF(w * .18f, h * .705f, w * .82f, h * .725f)
-        rounded(c, progress, 10f, Color.rgb(218, 220, 195))
-        if (stage > 0) rounded(c, RectF(progress.left, progress.top, progress.left + progress.width() * stage / 3f, progress.bottom), 10f, Color.rgb(91, 161, 99))
-        val action = RectF(w * .18f, h * .755f, w * .82f, h * .835f)
-        val canRestore = unlocked && stage < 3 && coins >= gardenCosts[index][stage]
-        val label = when { !unlocked -> "JARDIM BLOQUEADO"; stage >= 3 -> "JARDIM RESTAURADO!"; else -> "RESTAURAR  •  " + gardenCosts[index][stage] + " MOEDAS" }
-        rounded(c, action, 18f, if (canRestore) Color.rgb(71, 145, 91) else Color.rgb(178, 190, 165))
-        paint.color = if (canRestore) Color.WHITE else Color.rgb(76, 91, 66)
-        paint.textSize = w * .028f
-        paint.typeface = Typeface.create("sans-serif", Typeface.BOLD)
-        c.drawText(label, action.centerX(), action.centerY() + w * .01f, paint)
-        val back = RectF(w * .25f, h * .865f, w * .75f, h * .92f)
-        rounded(c, back, 15f, Color.rgb(71, 145, 91))
-        paint.color = Color.WHITE
-        paint.textSize = w * .029f
-        c.drawText("VOLTAR AOS JARDINS", back.centerX(), back.centerY() + w * .01f, paint)
+        drawDim(c,w,h)
+        drawPremiumCard(c,RectF(w*.045f,h*.055f,w*.955f,h*.945f),30f,Color.rgb(247,239,207),Color.rgb(207,220,181))
+        val index=selectedGarden.coerceIn(0,2);val stage=gardenStages[index]
+        val unlocked=index==0||gardenStages[index-1]>=3
+        paint.textAlign=Paint.Align.CENTER;paint.typeface=Typeface.create("serif",Typeface.BOLD)
+        paint.color=Color.rgb(47,91,64);paint.textSize=w*.052f
+        c.drawText(gardenNames[index],w*.5f,h*.125f,paint)
+        paint.typeface=Typeface.create("sans-serif",Typeface.BOLD);paint.textSize=w*.025f;paint.color=Color.rgb(174,116,43)
+        c.drawText("✦  $coins MOEDAS",w*.5f,h*.17f,paint)
+        val scene=RectF(w*.10f,h*.205f,w*.90f,h*.57f)
+        drawPremiumCard(c,scene,23f,Color.rgb(150,204,183),Color.rgb(54,122,78))
+        drawGardenMiniature(c,index,stage,RectF(scene.left+4f,scene.top+4f,scene.right-4f,scene.bottom-4f))
+        paint.textAlign=Paint.Align.CENTER;paint.typeface=Typeface.create("sans-serif-condensed",Typeface.BOLD)
+        paint.color=Color.rgb(47,91,64);paint.textSize=w*.034f
+        c.drawText("ETAPA $stage DE 3",w*.5f,h*.625f,paint)
+        paint.typeface=Typeface.create("sans-serif",Typeface.NORMAL);paint.textSize=w*.025f;paint.color=Color.rgb(103,111,87)
+        c.drawText(gardenDescriptions[index],w*.5f,h*.67f,paint)
+        val progress=RectF(w*.18f,h*.705f,w*.82f,h*.725f)
+        rounded(c,progress,10f,Color.rgb(192,204,169))
+        if(stage>0)drawPremiumCard(c,RectF(progress.left,progress.top,progress.left+progress.width()*stage/3f,progress.bottom),9f,Color.rgb(129,191,107),Color.rgb(59,139,76))
+        val action=RectF(w*.18f,h*.755f,w*.82f,h*.835f)
+        val canRestore=unlocked&&stage<3&&coins>=gardenCosts[index][stage]
+        val label=when{!unlocked->"JARDIM BLOQUEADO";stage>=3->"JARDIM RESTAURADO!";else->"RESTAURAR  •  "+gardenCosts[index][stage]+" MOEDAS"}
+        drawPremiumCard(c,action,19f,if(canRestore)Color.rgb(105,177,103)else Color.rgb(184,195,165),if(canRestore)Color.rgb(44,121,71)else Color.rgb(140,157,130))
+        paint.color=Color.WHITE;paint.textSize=w*.028f;paint.typeface=Typeface.create("sans-serif",Typeface.BOLD)
+        c.drawText(label,action.centerX(),action.centerY()+w*.01f,paint)
+        val back=RectF(w*.25f,h*.865f,w*.75f,h*.92f)
+        drawPremiumCard(c,back,15f,Color.rgb(72,151,94),Color.rgb(34,103,67))
+        paint.color=Color.WHITE;paint.textSize=w*.029f
+        c.drawText("VOLTAR AOS JARDINS",back.centerX(),back.centerY()+w*.01f,paint)
     }
+
     private fun drawGardensScreen(c: Canvas, w: Float, h: Float) {
         // Mapa-múndi ilustrado: terreno contínuo, rio, trilha e regiões exploráveis.
         paint.shader = LinearGradient(0f, 0f, w, h,
