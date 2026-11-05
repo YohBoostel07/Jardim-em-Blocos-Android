@@ -403,7 +403,8 @@ class GardenGameView(context: Context) : View(context) {
 
     private fun drawGardenMiniature(c: Canvas, index: Int, stage: Int, rect: RectF) {
         val save=c.save()
-        c.clipRoundRect(rect,22f,22f)
+        val clipPath=android.graphics.Path().apply{addRoundRect(rect,22f,22f,android.graphics.Path.Direction.CW)}
+        c.clipPath(clipPath)
         val sky=when(index){0->intArrayOf(Color.rgb(116,196,235),Color.rgb(224,241,208));1->intArrayOf(Color.rgb(82,150,188),Color.rgb(199,224,177));else->intArrayOf(Color.rgb(99,185,224),Color.rgb(218,239,222))}
         paint.shader=LinearGradient(rect.left,rect.top,rect.left,rect.bottom,sky[0],sky[1],Shader.TileMode.CLAMP)
         c.drawRect(rect,paint);paint.shader=null
