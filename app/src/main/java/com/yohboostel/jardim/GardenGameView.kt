@@ -70,6 +70,11 @@ class GardenGameView(context: Context) : View(context) {
     private var showGardens = false
     private var gardenDetailOpen = false
     private var selectedGarden = 0
+    private var showShop = false
+    private var activePower = ""
+    private var hammerCount = prefs.getInt("power_hammer", 0)
+    private var rowBombCount = prefs.getInt("power_row_bomb", 0)
+    private var rerollCount = prefs.getInt("power_reroll", 0)
     private var coins = prefs.getInt("garden_coins", 100)
     private val gardenNames = listOf("Jardim das Flores", "Bosque Encantado", "Lago Sereno")
     private val gardenDescriptions = listOf("Recupere o canteiro e traga as cores de volta.", "Desperte a vida entre as árvores.", "Limpe as águas e floresça as margens.")
@@ -146,6 +151,7 @@ class GardenGameView(context: Context) : View(context) {
         if (showGardens) {
             if (gardenDetailOpen) drawGardenDetailScreen(canvas, w, h) else drawGardensScreen(canvas, w, h)
         }
+        if (showShop) drawShopScreen(canvas, w, h)
         if (showTutorial) drawTutorial(canvas, w, h)
         else if (confirmRestart) drawRestartConfirmation(canvas, w, h)
         else if (paused) drawPauseMenu(canvas, w, h)
@@ -223,6 +229,11 @@ class GardenGameView(context: Context) : View(context) {
         drawStat(c, w * .69f, h * .165f, "RECORDE", max(best, score).toString())
         paint.color=Color.rgb(255,226,160);paint.textSize=w*.025f;c.drawText("NÍVEL $level  •  ✦ $coins",w*.50f,h*.216f,paint)
         val lp=(score%500)/500f;val lb=RectF(w*.25f,h*.222f,w*.75f,h*.229f);rounded(c,lb,5f,Color.argb(85,235,247,232));if(lp>0f)rounded(c,RectF(lb.left,lb.top,lb.left+lb.width()*lp,lb.bottom),5f,Color.rgb(255,213,112))
+        val shopButton = RectF(w * .715f, h * .125f, w * .835f, h * .205f)
+        rounded(c, shopButton, 18f, Color.argb(175, 5, 35, 29))
+        paint.color = Color.rgb(255, 226, 160)
+        paint.textSize = w * .034f
+        c.drawText("LOJA", shopButton.centerX(), shopButton.centerY() + w * .012f, paint)
         val button = RectF(w * .855f, h * .125f, w * .965f, h * .205f)
         rounded(c, button, 18f, Color.argb(150, 5, 35, 29))
         paint.color = Color.WHITE
@@ -571,11 +582,127 @@ class GardenGameView(context: Context) : View(context) {
     }
 
     private fun drawFooter(c: Canvas, w: Float, h: Float) {
-        paint.color = Color.rgb(218, 241, 220)
+        paint.color = if (activePower.isNotEmpty()) Color.rgb(255, 226, 160) else Color.rgb(218, 241, 220)
         paint.textAlign = Paint.Align.CENTER
-        paint.typeface = Typeface.create("sans-serif", Typeface.NORMAL)
+        paint.typeface = Typeface.create("sans-serif-rounded", Typeface.BOLD)
         paint.textSize = w * .025f
-        c.drawText("Arraste uma peça para o tabuleiro", w / 2f, h * .955f, paint)
+        val hint = when (activePower) {
+            "hammer" -> "MARTELO ATIVO • TOQUE EM UM BLOCO"
+            "row" -> "BOMBA DE LINHA ATIVA • TOQUE NA LINHA"
+            else -> "Arraste uma peça para o tabuleiro"
+        }
+        c.drawText(hint, w / 2f, h * .955f, paint)
+    }
+
+    private fun drawShopScreen(c: Canvas, w: Float, h: Float) {
+        drawDim(c,w,h)
+        rounded(c,RectF(w*.045f,h*.055f,w*.955f,h*.945f),28f,Color.rgb(239,231,197))
+        paint.textAlign=Paint.Align.CENTER
+        paint.typeface=Typeface.create("sans-serif-rounded",Typeface.BOLD)
+        paint.color=Color.rgb(47,91,64)
+        paint.textSize=w*.060f
+        c.drawText("LOJA DE PODERES",w*.5f,h*.125f,paint)
+        paint.textSize=w*.029f
+        paint.color=Color.rgb(174,116,43)
+        c.drawText("✦  "+coins+" moedas disponíveis",w*.5f,h*.17f,paint)
+        val names=listOf("Martelo","Bomba de linha","Nova mão")
+        val descriptions=listOf("Remove um bloco do tabuleiro","Limpa todos os blocos de uma linha","Troca as três peças por novas")
+        val counts=intArrayOf(hammerCount,rowBombCount,rerollCount)
+        val prices=intArrayOf(80,120,60)
+        val icons=listOf("◆","✹","↻")
+        for(i in 0..2){
+            val top=h*(.225f+i*.185f)
+            rounded(c,RectF(w*.09f,top,w*.91f,top+h*.155f),18f,Color.rgb(255,250,229))
+            paint.color=intArrayOf(Color.rgb(220,143,79),Color.rgb(210,104,82),Color.rgb(99,155,190))[i]
+            c.drawCircle(w*.19f,top+h*.075f,w*.052f,paint)
+            paint.color=Color.WHITE
+            paint.textSize=w*.052f
+            c.drawText(icons[i],w*.19f,top+h*.093f,paint)
+            paint.textAlign=Paint.Align.LEFT
+            paint.typeface=Typeface.create("sans-serif-rounded",Typeface.BOLD)
+            paint.color=Color.rgb(47,91,64)
+            paint.textSize=w*.032f
+            c.drawText(names[i],w*.29f,top+h*.055f,paint)
+            paint.typeface=Typeface.create("sans-serif",Typeface.NORMAL)
+            paint.color=Color.rgb(103,111,87)
+            paint.textSize=w*.022f
+            c.drawText(descriptions[i],w*.29f,top+h*.090f,paint)
+            paint.typeface=Typeface.create("sans-serif-rounded",Typeface.BOLD)
+            paint.color=Color.rgb(174,116,43)
+            paint.textSize=w*.024f
+            c.drawText("Possui: "+counts[i],w*.29f,top+h*.128f,paint)
+            val btn=RectF(w*.68f,top+h*.045f,w*.87f,top+h*.115f)
+            rounded(c,btn,12f,if(counts[i]>0)Color.rgb(71,145,91)else Color.rgb(226,181,84))
+            paint.textAlign=Paint.Align.CENTER
+            paint.color=Color.WHITE
+            paint.textSize=w*.022f
+            c.drawText(if(counts[i]>0)"USAR" else prices[i].toString()+" ✦",btn.centerX(),btn.centerY()+w*.008f,paint)
+        }
+        rounded(c,RectF(w*.23f,h*.825f,w*.77f,h*.90f),16f,Color.rgb(71,145,91))
+        paint.textAlign=Paint.Align.CENTER
+        paint.color=Color.WHITE
+        paint.textSize=w*.029f
+        c.drawText("VOLTAR AO JOGO",w*.5f,h*.87f,paint)
+    }
+
+    private fun savePowerInventory() {
+        prefs.edit().putInt("power_hammer",hammerCount)
+            .putInt("power_row_bomb",rowBombCount)
+            .putInt("power_reroll",rerollCount).apply()
+        saveGardenProgress()
+    }
+
+    private fun activateShopItem(index:Int) {
+        val counts=intArrayOf(hammerCount,rowBombCount,rerollCount)
+        val prices=intArrayOf(80,120,60)
+        if(counts[index]>0){
+            when(index){
+                0->{hammerCount--;activePower="hammer"}
+                1->{rowBombCount--;activePower="row"}
+                2->{rerollCount--;pieces=MutableList(3){newPiece()};selected=0;gameOver=false}
+            }
+            savePowerInventory()
+            playTone(ToneGenerator.TONE_PROP_ACK,130)
+            comboLabel=when(index){0->"MARTELO ATIVO";1->"BOMBA DE LINHA ATIVA";else->"NOVAS PEÇAS!"}
+        } else if(coins>=prices[index]){
+            coins-=prices[index]
+            when(index){0->hammerCount++;1->rowBombCount++;2->rerollCount++}
+            savePowerInventory()
+            playTone(ToneGenerator.TONE_PROP_ACK,130)
+        } else {
+            playTone(ToneGenerator.TONE_PROP_BEEP,90)
+        }
+    }
+
+    private fun usePowerAt(x:Float,y:Float) {
+        if(activePower.isEmpty() || x<boardLeft || x>=boardLeft+boardSize || y<boardTop || y>=boardTop+boardSize)return
+        val row=((y-boardTop)/cell).toInt().coerceIn(0,8)
+        val col=((x-boardLeft)/cell).toInt().coerceIn(0,8)
+        var removed=0
+        if(activePower=="hammer" && board[row][col]){
+            board[row][col]=false
+            colors[row][col]=Color.TRANSPARENT
+            removed=1
+        } else if(activePower=="row"){
+            for(c in 0..8) if(board[row][c]){
+                board[row][c]=false
+                colors[row][c]=Color.TRANSPARENT
+                removed++
+            }
+        }
+        if(removed>0){
+            score+=removed*10
+            if(score>best){best=score;prefs.edit().putInt("best_score",best).apply()}
+            level=1+score/500
+            if(activePower=="hammer")hammerCount-- else rowBombCount--
+            activePower=""
+            savePowerInventory()
+            gameOver=!availablePiecesHaveMove()
+            playTone(ToneGenerator.TONE_PROP_ACK,160)
+        } else {
+            playTone(ToneGenerator.TONE_PROP_BEEP,70)
+        }
+        invalidate()
     }
 
     private fun drawPiece(c: Canvas, piece: Piece, cx: Float, cy: Float, size: Float) {
@@ -847,7 +974,7 @@ class GardenGameView(context: Context) : View(context) {
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
         if (event.action == MotionEvent.ACTION_DOWN) {
-            if (mainMenuOpen || showTutorial || paused || gameOver || confirmRestart || showGardens) return true
+            if (mainMenuOpen || showTutorial || paused || gameOver || confirmRestart || showGardens || showShop) return true
             if (event.y < height * .22f && event.x > width * .82f) return true
             if (event.y > trayCenterY - height * .06f && event.y < trayCenterY + height * .06f) {
                 choosePieceAt(event.x)
@@ -867,6 +994,10 @@ class GardenGameView(context: Context) : View(context) {
         }
         when (event.action) {
             MotionEvent.ACTION_MOVE -> {
+                if (activePower.isNotEmpty()) {
+                    usePowerAt(event.x,event.y)
+                    return true
+                }
                 if (dragging) {
                     updatePreview(event.x, event.y)
                     invalidate()
@@ -897,6 +1028,16 @@ class GardenGameView(context: Context) : View(context) {
                 }
                 if (showTutorial) {
                     finishTutorial()
+                    return true
+                }
+                if (showShop) {
+                    if (event.y > height*.81f) {
+                        showShop=false
+                    } else {
+                        val idx=((event.y/height-.225f)/.185f).toInt()
+                        if(idx in 0..2) activateShopItem(idx)
+                    }
+                    invalidate()
                     return true
                 }
                 if (showGardens) {
@@ -973,6 +1114,11 @@ class GardenGameView(context: Context) : View(context) {
                 }
                 if (event.y < height * .22f && event.x < width * .16f) {
                     showGardens = true
+                    invalidate()
+                    return true
+                }
+                if (event.y in height*.12f..height*.21f && event.x in width*.70f..width*.845f) {
+                    showShop=true
                     invalidate()
                     return true
                 }
