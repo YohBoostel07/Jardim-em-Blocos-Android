@@ -995,6 +995,9 @@ class GardenGameView(context: Context) : View(context) {
         when (event.action) {
             MotionEvent.ACTION_MOVE -> {
                 if (activePower.isNotEmpty()) {
+                    dragging=false
+                    previewRow=-1
+                    previewCol=-1
                     usePowerAt(event.x,event.y)
                     return true
                 }
